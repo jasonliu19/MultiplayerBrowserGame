@@ -1,0 +1,41 @@
+<canvas id = "ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+
+<script src = "/socket.io/socket.io.js"></script>
+<script>
+    var ctx = document.getElementById("ctx").getContext("2d");
+    ctx.font = '30px Arial';
+
+    var socket = io();
+
+
+    socket.on('newPosition', function (data) {
+        ctx.clearRect(0,0,500,500);
+        for(var i = 0; i < data.length; i++){
+            ctx.fillText(data[i].number, data[i].x, data[i].y);
+        }
+
+    });
+
+    document.onkeydown = function (ev) {
+        if(ev.keyCode == 68) //d
+            socket.emit('keypress', {inputId: 'right', state: true});
+        else if(ev.keyCode == 83) //s
+            socket.emit('keypress', {inputId: 'down', state: true});
+        else if(ev.keyCode == 65) //a
+            socket.emit('keypress', {inputId: 'left', state: true});
+        else if(ev.keyCode == 87) //w
+            socket.emit('keypress', {inputId: 'up', state: true});
+    }
+
+    document.onkeyup = function (ev) {
+        if(ev.keyCode == 68) //d
+            socket.emit('keypress', {inputId: 'right', state: false});
+        else if(ev.keyCode == 83) //s
+            socket.emit('keypress', {inputId: 'down', state: false});
+        else if(ev.keyCode == 65) //a
+            socket.emit('keypress', {inputId: 'left', state: false});
+        else if(ev.keyCode == 87) //w
+            socket.emit('keypress', {inputId: 'up', state: false});
+    }
+
+</script>
