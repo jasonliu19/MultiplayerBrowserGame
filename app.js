@@ -70,6 +70,7 @@ var Player = function (id) {
 
 Player.list = {};
 Player.onConnect = function (socket) {
+    console.log("Socket: " + socket.id);
     var player = Player(socket.id);
 
     socket.on('keypress', function (data) {
@@ -81,6 +82,11 @@ Player.onConnect = function (socket) {
             player.pressingDown = data.state;
         else if(data.inputId === 'up')
             player.pressingUp = data.state;
+    });
+    
+    socket.on('mouseclick', function(data){
+        console.log(data.angle);
+        var bullet = Bullet(data.angle, data.x, data.y);
     });
 }
 
@@ -103,11 +109,13 @@ Player.update = function () {
     return pack;
 }
 
-var Bullet = function (angle) {
+var Bullet = function (angle,x,y) {
     var self = Entity();
+    self.x = x;
+    self.y = y;
     self.id = Math.random();
-    self.spdX = Math.cos(angle/180*Math.PI) * 10;
-    self.spdY = Math.sin(angle/180*Math.PI) * 10;
+    self.spdX = Math.cos(angle/180*Math.PI) * 100;
+    self.spdY = Math.sin(angle/180*Math.PI) * 100;
 
     self.timer = 0;
     self.toRemove = false;
@@ -124,7 +132,7 @@ Bullet.list = {};
 
 Bullet.update = function () {
     if(Math.random() < 0.05){
-        Bullet(Math.random()*360);
+        Bullet(Math.random()*360, 30, 30);
     }
 
     var pack = [];

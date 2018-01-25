@@ -1,7 +1,7 @@
 <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
-    var game = new Phaser.Game('100', '100', Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, '', { preload: preload, create: create, update: update });
     window.addEventListener('resize', function(){
         game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
         game.scale.setGameSize('100%', '100%');
@@ -16,13 +16,29 @@
         }
 
         self.gameobject.scale.setTo(0.6);
+        self.gameobject.anchor.x = 100.0/313;
+        self.gameobject.anchor.y = 120.0/207;
         self.update = function(newx, newy){
             self.updatePosition(newx, newy);
+            self.updateRotation(game.camera.x + game.input.mousePointer.x,game.camera.y+ game.input.mousePointer.y);
         }
         
         self.updatePosition = function(newx, newy){
             self.gameobject.x = newx;
             self.gameobject.y = newy;
+        }
+        
+        self.updateRotation = function(x,y){
+            var absAngle = Math.abs(Math.atan((y-self.gameobject.y)/(x-self.gameobject.x))*180/Math.PI);
+            if(x > self.gameobject.x && y > self.gameobject.y)
+                self.gameobject.angle = absAngle;
+            else if (x < self.gameobject.x && y > self.gameobject.y)
+                self.gameobject.angle = -180 - absAngle;
+            else if (x < self.gameobject.x && y < self.gameobject.y)
+                self.gameobject.angle = -180 + absAngle;
+            else
+                self.gameobject.angle = -absAngle;
+            console.log(self.gameobject.angle);
         }
         
         Player.list[id] = self;
@@ -31,6 +47,34 @@
     }
         
     Player.list = {};
+    Player.updateStates = function (data) {
+        for(var i = 0; i < data.player.length; i++){
+            var thisId = data.player[i].id;
+            if(!(thisId in Player.list)){
+                var player = Player(thisId);
+                player.update(data.player[i].x, data.player[i].y);
+            } else{
+                Player.list[thisId].update(data.player[i].x, data.player[i].y);
+            }
+            Player.list[thisId].toDelete = false;
+            
+        }
+        
+        //Test which entities need to be deleted
+        for(var i in Player.list){
+            if(Player.list[i].toDelete){
+                Player.list[i].gameobject.kill();
+                delete Player.list[i];
+            } else{
+                Player.list[i].toDelete = true;
+            }
+        }
+        
+    }
+    Player.thisPlayer = function(){
+        return Player.list[socket.id];
+    }
+    
     var Bullet = function(id){
         var self = {
             gameobject: game.add.sprite(30, 30, 'block'),
@@ -38,6 +82,8 @@
             toDelete: false,
         }
         self.gameobject.scale.setTo(0.2);
+        self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
 
         self.update = function(newx, newy){
             self.updatePosition(newx, newy);
@@ -54,36 +100,7 @@
     }
 
     Bullet.list = {};
-    
-    function preload() {
-
-        game.load.image('dude', '/assets/player.png');
-        game.load.image('block', '/assets/block.png');
-    }
-    
-    var scoreText;
-    function create() {
-        game.time.advancedTiming = true;
-        game.stage.disableVisibilityChange = true;
-        game.stage.backgroundColor = '#95BCC7';
-        game.add.sprite(30, 30, 'block');
-        
-        scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
-        
-        socket.on('newPosition', function (data) {
-        
-        for(var i = 0; i < data.player.length; i++){
-            var thisId = data.player[i].id;
-            if(!(thisId in Player.list)){
-                var player = Player(thisId);
-                player.update(data.player[i].x, data.player[i].y);
-            } else{
-                Player.list[thisId].update(data.player[i].x, data.player[i].y);
-            }
-            Player.list[thisId].toDelete = false;
-            
-        }
-            
+    Bullet.updateStates = function(data) {
         for(var i = 0; i < data.bullet.length; i++){
             var thisId = data.bullet[i].id;
             if(!(thisId in Bullet.list)){
@@ -99,27 +116,45 @@
         for(var i in Bullet.list){
             if(Bullet.list[i].toDelete){
                 Bullet.list[i].gameobject.kill();
-                delete Bullet[bullet];
+                delete Bullet.list[i];
             } else{
                 Bullet.list[i].toDelete = true;
             }
         }
-        //Test which entities need to be deleted
-        for(var i in Player.list){
-            if(Player.list[i].toDelete){
-                Player.list[i].gameobject.kill();
-                delete Bullet[bullet];
-            } else{
-                Player.list[i].toDelete = true;
-            }
-        }
-        
-        });
-        
-        
     }
     
+    function preload() {
+
+        game.load.image('dude', '/assets/player.png');
+        game.load.image('block', '/assets/block.png');
+    }
+    
+    var scoreText;
+    
+    function create() {
+        game.world.setBounds(0, 0, 10000, 10000);
+        game.time.advancedTiming = true;
+        game.stage.disableVisibilityChange = true;
+        game.stage.backgroundColor = '#95BCC7';
+        
+        scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
+        
+        socket.on('newPosition', function (data) {
+            Player.updateStates(data);
+            Bullet.updateStates(data);
+        });
+        
+        console.log("socket: " + socket.id);
+
+    }
+    
+    var cameraFollowed = false;
     function update(){
+        if(!cameraFollowed && Player.thisPlayer()){
+            game.camera.follow(Player.thisPlayer().gameobject);
+            cameraFollowed = true;
+        }
+
         scoreText.text = "FPS: " + game.time.fps;
     }
     
@@ -147,6 +182,14 @@
             socket.emit('keypress', {inputId: 'left', state: false});
         else if(ev.keyCode == 87) //w
             socket.emit('keypress', {inputId: 'up', state: false});
+    }
+    
+    document.onclick = function(ev){
+        socket.emit('mouseclick', {
+            x: Player.thisPlayer().gameobject.x,
+            y: Player.thisPlayer().gameobject.y,
+            angle: Player.thisPlayer().gameobject.angle,
+        });
     }
 
 </script>
