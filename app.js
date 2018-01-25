@@ -28,6 +28,7 @@ var Entity = function () {
         spdX: 0,
         spdY: 0,
         id: "",
+        angle:0,
     }
     self.update = function () {
         self.updatePosition();
@@ -96,6 +97,10 @@ Player.onConnect = function (socket) {
         console.log(data.angle);
         var bullet = Bullet(data.angle, data.x, data.y);
     });
+    
+    socket.on('updateRotation', function(data){
+        player.angle = data;
+    });
 }
 
 Player.onDisconnect = function (socket) {
@@ -111,6 +116,7 @@ Player.update = function () {
             x:player.x,
             y:player.y,
             id:player.id,
+            angle:player.angle,
         });
 
     }
@@ -139,9 +145,6 @@ var Bullet = function (angle,x,y) {
 Bullet.list = {};
 
 Bullet.update = function () {
-    if(Math.random() < 0.05){
-        Bullet(Math.random()*360, 30, 30);
-    }
 
     var pack = [];
     for(var i in Bullet.list){

@@ -13,14 +13,24 @@
             gameobject: game.add.sprite(30, 30, 'dude'),
             ID: id,
             toDelete: false,
+            thisPlayer : false,
+        }
+        if(id === socket.id){
+            self.thisPlayer = true;
         }
 
         self.gameobject.scale.setTo(0.6);
         self.gameobject.anchor.x = 100.0/313;
         self.gameobject.anchor.y = 120.0/207;
-        self.update = function(newx, newy){
-            self.updatePosition(newx, newy);
-            self.updateRotation(game.camera.x + game.input.mousePointer.x,game.camera.y+ game.input.mousePointer.y);
+        self.update = function(data){
+            self.updatePosition(data.x, data.y);
+            
+            if (self.thisPlayer){
+                self.updateSelfRotation(game.camera.x + game.input.mousePointer.x,game.camera.y+ game.input.mousePointer.y);
+                socket.emit('updateRotation', self.gameobject.angle);
+            }
+            else
+                self.gameobject.angle = data.angle;
         }
         
         self.updatePosition = function(newx, newy){
@@ -28,7 +38,7 @@
             self.gameobject.y = newy;
         }
         
-        self.updateRotation = function(x,y){
+        self.updateSelfRotation = function(x,y){
             var absAngle = Math.abs(Math.atan((y-self.gameobject.y)/(x-self.gameobject.x))*180/Math.PI);
             if(x > self.gameobject.x && y > self.gameobject.y)
                 self.gameobject.angle = absAngle;
@@ -50,12 +60,10 @@
     Player.updateStates = function (data) {
         for(var i = 0; i < data.player.length; i++){
             var thisId = data.player[i].id;
-            if(!(thisId in Player.list)){
-                var player = Player(thisId);
-                player.update(data.player[i].x, data.player[i].y);
-            } else{
-                Player.list[thisId].update(data.player[i].x, data.player[i].y);
-            }
+            if(!(thisId in Player.list))
+                Player(thisId);
+            
+            Player.list[thisId].update(data.player[i], data.player[i]);
             Player.list[thisId].toDelete = false;
             
         }
