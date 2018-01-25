@@ -1,24 +1,132 @@
-<canvas id = "ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
-
+<script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
-    var ctx = document.getElementById("ctx").getContext("2d");
-    ctx.font = '30px Arial';
-
-    var socket = io();
-
-
-    socket.on('newPosition', function (data) {
-        ctx.clearRect(0,0,500,500);
-        for(var i = 0; i < data.player.length; i++){
-            ctx.fillText(data.player[i].number, data.player[i].x, data.player[i].y);
-        }
-        for(var i = 0; i < data.bullet.length; i++){
-            ctx.fillRect(data.bullet[i].x-5, data.bullet[i].y-5, 10, 10);
-        }
-
+    var game = new Phaser.Game('100', '100', Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    window.addEventListener('resize', function(){
+        game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+        game.scale.setGameSize('100%', '100%');
+        console.log("resize");
     });
 
+    var Player = function(id){
+        var self = {
+            gameobject: game.add.sprite(30, 30, 'dude'),
+            ID: id,
+            toDelete: false,
+        }
+
+        self.gameobject.scale.setTo(0.6);
+        self.update = function(newx, newy){
+            self.updatePosition(newx, newy);
+        }
+        
+        self.updatePosition = function(newx, newy){
+            self.gameobject.x = newx;
+            self.gameobject.y = newy;
+        }
+        
+        Player.list[id] = self;
+        
+        return self;
+    }
+        
+    Player.list = {};
+    var Bullet = function(id){
+        var self = {
+            gameobject: game.add.sprite(30, 30, 'block'),
+            ID: id,
+            toDelete: false,
+        }
+        self.gameobject.scale.setTo(0.2);
+
+        self.update = function(newx, newy){
+            self.updatePosition(newx, newy);
+        }
+        
+        self.updatePosition = function(newx, newy){
+            self.gameobject.x = newx;
+            self.gameobject.y = newy;
+        }
+        
+        Bullet.list[id] = self;
+        
+        return self;
+    }
+
+    Bullet.list = {};
+    
+    function preload() {
+
+        game.load.image('dude', '/assets/player.png');
+        game.load.image('block', '/assets/block.png');
+    }
+    
+    var scoreText;
+    function create() {
+        game.time.advancedTiming = true;
+        game.stage.disableVisibilityChange = true;
+        game.stage.backgroundColor = '#95BCC7';
+        game.add.sprite(30, 30, 'block');
+        
+        scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
+        
+        socket.on('newPosition', function (data) {
+        
+        for(var i = 0; i < data.player.length; i++){
+            var thisId = data.player[i].id;
+            if(!(thisId in Player.list)){
+                var player = Player(thisId);
+                player.update(data.player[i].x, data.player[i].y);
+            } else{
+                Player.list[thisId].update(data.player[i].x, data.player[i].y);
+            }
+            Player.list[thisId].toDelete = false;
+            
+        }
+            
+        for(var i = 0; i < data.bullet.length; i++){
+            var thisId = data.bullet[i].id;
+            if(!(thisId in Bullet.list)){
+                var bullet = Bullet(thisId);
+                bullet.update(data.bullet[i].x, data.bullet[i].y);
+            } else{
+                Bullet.list[thisId].update(data.bullet[i].x, data.bullet[i].y);
+            }
+            Bullet.list[thisId].toDelete = false;
+        }
+        
+        //Test which entities need to be deleted
+        for(var i in Bullet.list){
+            if(Bullet.list[i].toDelete){
+                Bullet.list[i].gameobject.kill();
+                delete Bullet[bullet];
+            } else{
+                Bullet.list[i].toDelete = true;
+            }
+        }
+        //Test which entities need to be deleted
+        for(var i in Player.list){
+            if(Player.list[i].toDelete){
+                Player.list[i].gameobject.kill();
+                delete Bullet[bullet];
+            } else{
+                Player.list[i].toDelete = true;
+            }
+        }
+        
+        });
+        
+        
+    }
+    
+    function update(){
+        scoreText.text = "FPS: " + game.time.fps;
+    }
+    
+
+    var socket = io();
+    
+    
     document.onkeydown = function (ev) {
         if(ev.keyCode == 68) //d
             socket.emit('keypress', {inputId: 'right', state: true});

@@ -2,10 +2,11 @@ var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
 
-app.get('/', function(req, res){
+app.get('/', function (req, res){
    res.sendFile(__dirname + '/client/index.html');
 });
 app.use('/client', express.static(__dirname + '/client'));
+app.use('/assets', express.static(__dirname + '/assets'));
 
 serv.listen(2001);
 console.log("Server started");
@@ -35,11 +36,11 @@ var Player = function (id) {
     var self = Entity();
     self.id = id;
     self.number="" + Math.floor(10*Math.random());
-    self.pressingRight= false,
-    self.pressingLeft= false,
-    self.pressingDown= false,
-    self.pressingUp= false,
-    self.maxspeed=10,
+    self.pressingRight= false;
+    self.pressingLeft= false;
+    self.pressingDown= false;
+    self.pressingUp= false;
+    self.maxspeed=10;
 
     self.updateSpd = function () {
         if(self.pressingRight)
@@ -95,7 +96,7 @@ Player.update = function () {
         pack.push({
             x:player.x,
             y:player.y,
-            number:player.number,
+            id:player.id,
         });
 
     }
@@ -112,9 +113,10 @@ var Bullet = function (angle) {
     self.toRemove = false;
     var super_update = self.update;
     self.update = function () {
-        if(self.timer++ > 100)
+        if(self.timer++ > 50)
             self.toRemove = true;
         super_update();
+        return self.toRemove;
     }
     Bullet.list[self.id] = self;
 }
@@ -128,11 +130,15 @@ Bullet.update = function () {
     var pack = [];
     for(var i in Bullet.list){
         var bullet = Bullet.list[i];
-        bullet.update();
-        pack.push({
-            x:bullet.x,
-            y:bullet.y,
-        });
+        if(bullet.update())
+            delete Bullet.list[i];
+        else {
+            pack.push({
+                x:bullet.x,
+                y:bullet.y,
+                id:bullet.id,
+            });
+        }
 
     }
     return pack;
