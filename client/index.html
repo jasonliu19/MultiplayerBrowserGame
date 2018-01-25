@@ -1,11 +1,15 @@
+<body style = "padding:0px; margin:0px">
+    <div id = "gameWindow">
+    </div>
+</body>
 <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
-    var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, 'gameWindow', { preload: preload, create: create, update: update });
     window.addEventListener('resize', function(){
-        game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
-        game.scale.setGameSize('100%', '100%');
-        console.log("resize");
+        game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
+        game.scale.setGameSize(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio);
+        console.log("resize " + window.innerHeight * window.devicePixelRatio);
     });
 
     var Player = function(id){
@@ -24,7 +28,11 @@
         self.gameobject.anchor.y = 120.0/207;
         self.update = function(data){
             self.updatePosition(data.x, data.y);
+            self.handleRotations(data);
             
+        }
+        
+        self.handleRotations = function(data){
             if (self.thisPlayer){
                 self.updateSelfRotation(game.camera.x + game.input.mousePointer.x,game.camera.y+ game.input.mousePointer.y);
                 socket.emit('updateRotation', self.gameobject.angle);
@@ -48,7 +56,6 @@
                 self.gameobject.angle = -180 + absAngle;
             else
                 self.gameobject.angle = -absAngle;
-            console.log(self.gameobject.angle);
         }
         
         Player.list[id] = self;
