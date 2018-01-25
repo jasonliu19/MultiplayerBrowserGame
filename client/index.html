@@ -1,44 +1,134 @@
-<canvas id = "ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
-
-<script src = "/socket.io/socket.io.js"></script>
-<script>
-    var ctx = document.getElementById("ctx").getContext("2d");
-    ctx.font = '30px Arial';
-
-    var socket = io();
-
-
-    socket.on('newPosition', function (data) {
-        ctx.clearRect(0,0,500,500);
-        for(var i = 0; i < data.player.length; i++){
-            ctx.fillText(data.player[i].number, data.player[i].x, data.player[i].y);
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Phaser - Making your first game, part 1</title>
+    <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
         }
-        for(var i = 0; i < data.bullet.length; i++){
-            ctx.fillRect(data.bullet[i].x-5, data.bullet[i].y-5, 10, 10);
-        }
+    </style>
+</head>
+<body>
 
-    });
+<script type="text/javascript">
 
-    document.onkeydown = function (ev) {
-        if(ev.keyCode == 68) //d
-            socket.emit('keypress', {inputId: 'right', state: true});
-        else if(ev.keyCode == 83) //s
-            socket.emit('keypress', {inputId: 'down', state: true});
-        else if(ev.keyCode == 65) //a
-            socket.emit('keypress', {inputId: 'left', state: true});
-        else if(ev.keyCode == 87) //w
-            socket.emit('keypress', {inputId: 'up', state: true});
+var game = new Phaser.Game('100', '100', Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+var platforms;
+var player;
+var cursors;
+var stars;
+var blocks;
+var score = 0;
+var scoreText;
+
+window.addEventListener('resize', function(){
+    game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+    game.scale.setGameSize('100%', '100%');
+    console.log("resize");
+});
+    
+
+
+function preload() {
+    game.load.image('sky', '/assets/sky.png');
+    game.load.image('ground', '/assets/platform.png');
+    game.load.image('star', '/assets/star.png');
+    game.load.spritesheet('dude', '/assets/player.png');
+    game.load.image('block', '/assets/block.png');
+
+}
+
+
+function create() {
+    game.time.advancedTiming = true;
+    game.stage.disableVisibilityChange = true;
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.stage.backgroundColor = '#95BCC7';
+
+    blocks = game.add.group();
+
+    blocks.enableBody = true;
+    blocks.immovable = true;
+
+    platforms = game.add.group();
+
+    platforms.enableBody = true;
+
+
+    var ledge = platforms.create(400, 400,'ground');
+
+    ledge.body.immovable = true;
+
+    ledge = platforms.create(-150, 250, 'ground');
+    ledge.body.immovable = true;
+
+    player = game.add.sprite(32, game.world.height - 150, 'dude');
+
+    game.physics.arcade.enable(player);
+
+    player.scale.setTo(0.6);
+    player.body.collideWorldBounds = true;
+
+    player.animations.add('left', [0, 1, 2, 3], 10, true);
+    player.animations.add('right', [5, 6, 7, 8], 10, true);
+    cursors = game.input.keyboard.createCursorKeys();
+
+    stars = game.add.group();
+    stars.enableBody = true;
+
+    for(var i = 0; i <12; i++){
+        var star = stars.create(i*70, 0, 'star');
+        star.body.gravity.y = 15;
+
     }
 
-    document.onkeyup = function (ev) {
-        if(ev.keyCode == 68) //d
-            socket.emit('keypress', {inputId: 'right', state: false});
-        else if(ev.keyCode == 83) //s
-            socket.emit('keypress', {inputId: 'down', state: false});
-        else if(ev.keyCode == 65) //a
-            socket.emit('keypress', {inputId: 'left', state: false});
-        else if(ev.keyCode == 87) //w
-            socket.emit('keypress', {inputId: 'up', state: false});
+    for(var i = 0; i <20; i++){
+        var randX = game.width*Math.random();
+        var randY = game.height*Math.random();
+        var block = blocks.create(randX, randY, 'block');
+        block.scale.setTo(0.5);
     }
+
+    scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+
+}
+
+function collectStar(player, star){
+    star.kill();
+
+    score += 10;
+    scoreText.text = 'Score' + score;
+}
+
+function update() {
+    console.log(game.time.fps);
+    var hitPlatform = game.physics.arcade.collide(player, platforms);
+    game.physics.arcade.collide(stars, platforms)
+    game.physics.arcade.collide(player, blocks)
+    game.physics.arcade.overlap(player,stars, collectStar, null, this);
+
+    player.body.velocity.x = 0;
+    player.body.velocity.y = 0;
+
+    if(cursors.left.isDown){
+        player.body.velocity.x = -300;
+
+    } else if (cursors.right.isDown){
+        player.body.velocity.x = 300;
+
+    } 
+
+    if(cursors.up.isDown){
+        player.body.velocity.y = -300;
+    } else if(cursors.down.isDown){
+        player.body.velocity.y = 300;
+    }
+}
 
 </script>
+
+</body>
+</html>
