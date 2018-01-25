@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
+var config = require('cloud-env');
 
 app.get('/', function (req, res){
    res.sendFile(__dirname + '/client/index.html');
@@ -8,8 +9,15 @@ app.get('/', function (req, res){
 app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
-serv.listen(2001);
-console.log("Server started");
+ 
+serv.listen(config.PORT, config.IP, function () {
+  console.log( "Listening on " + config.IP + ", port " + config.PORT )
+});
+
+
+
+//serv.listen(2001);
+//console.log("Server started");
 
 var SOCKET_LIST = {};
 
