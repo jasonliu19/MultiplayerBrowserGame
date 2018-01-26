@@ -83,24 +83,26 @@ Player.onConnect = function (socket) {
     var player = Player(socket.id);
 
     socket.on('keypress', function (data) {
-        if(data.inputId === 'left')
+        if(data.inputId === 'left'){
             player.pressingLeft = data.state;
-        else if(data.inputId === 'right')
+            player.angle = 180;
+        }
+        else if(data.inputId === 'right'){
             player.pressingRight = data.state;
-        else if(data.inputId === 'down')
+            player.angle = 0;
+        }
+        else if(data.inputId === 'down'){
             player.pressingDown = data.state;
-        else if(data.inputId === 'up')
+            player.angle = 90;
+        }
+        else if(data.inputId === 'up'){
             player.pressingUp = data.state;
+            player.angle = 270;
+        }
+        else if (data.inputId === 'space')
+            Bullet(player.angle, player.x, player.y);
     });
     
-    socket.on('mouseclick', function(data){
-        console.log(data.angle);
-        var bullet = Bullet(data.angle, data.x, data.y);
-    });
-    
-    socket.on('updateRotation', function(data){
-        player.angle = data;
-    });
 }
 
 Player.onDisconnect = function (socket) {

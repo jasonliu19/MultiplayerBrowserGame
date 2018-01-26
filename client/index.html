@@ -2,6 +2,7 @@
     <div id = "gameWindow">
     </div>
 </body>
+
 <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
@@ -18,6 +19,8 @@
             ID: id,
             toDelete: false,
             thisPlayer : false,
+            facing: 'up',
+
         }
         if(id === socket.id){
             self.thisPlayer = true;
@@ -26,6 +29,7 @@
         self.gameobject.scale.setTo(0.6);
         self.gameobject.anchor.x = 100.0/313;
         self.gameobject.anchor.y = 120.0/207;
+
         self.update = function(data){
             self.updatePosition(data.x, data.y);
             self.handleRotations(data);
@@ -34,11 +38,12 @@
         
         self.handleRotations = function(data){
             if (self.thisPlayer){
-                self.updateSelfRotation(game.camera.x + game.input.mousePointer.x,game.camera.y+ game.input.mousePointer.y);
-                socket.emit('updateRotation', self.gameobject.angle);
+                // self.updateSelfRotation(game.camera.x + game.input.mousePointer.x,game.camera.y+ game.input.mousePointer.y);
+                self.updateSelfRotation();
             }
-            else
+            else{
                 self.gameobject.angle = data.angle;
+            }
         }
         
         self.updatePosition = function(newx, newy){
@@ -46,16 +51,30 @@
             self.gameobject.y = newy;
         }
         
-        self.updateSelfRotation = function(x,y){
-            var absAngle = Math.abs(Math.atan((y-self.gameobject.y)/(x-self.gameobject.x))*180/Math.PI);
-            if(x > self.gameobject.x && y > self.gameobject.y)
-                self.gameobject.angle = absAngle;
-            else if (x < self.gameobject.x && y > self.gameobject.y)
-                self.gameobject.angle = -180 - absAngle;
-            else if (x < self.gameobject.x && y < self.gameobject.y)
-                self.gameobject.angle = -180 + absAngle;
-            else
-                self.gameobject.angle = -absAngle;
+        self.updateSelfRotation = function(){
+
+            //Mouse rotation
+            // var absAngle = Math.abs(Math.atan((y-self.gameobject.y)/(x-self.gameobject.x))*180/Math.PI);
+            // if(x > self.gameobject.x && y > self.gameobject.y)
+            //     self.gameobject.angle = absAngle;
+            // else if (x < self.gameobject.x && y > self.gameobject.y)
+            //     self.gameobject.angle = -180 - absAngle;
+            // else if (x < self.gameobject.x && y < self.gameobject.y)
+            //     self.gameobject.angle = -180 + absAngle;
+            // else
+            //     self.gameobject.angle = -absAngle;
+
+            if(!self.facing.localeCompare("left")){
+                console.log("going left");
+                self.gameobject.angle = 180;
+            } else if(self.facing == 'right'){
+                self.gameobject.angle = 0;
+            } else if(self.facing == 'up'){
+                self.gameobject.angle = -89.99;
+            } else{
+                self.gameobject.angle = 89.99;
+            }
+
         }
         
         Player.list[id] = self;
@@ -165,10 +184,11 @@
     
     var cameraFollowed = false;
     function update(){
-        if(!cameraFollowed && Player.thisPlayer()){
-            game.camera.follow(Player.thisPlayer().gameobject);
-            cameraFollowed = true;
-        }
+        game.camera.follow(Player.thisPlayer().gameobject);
+        // if(!cameraFollowed && Player.thisPlayer()){
+            
+        //     cameraFollowed = true;
+        // }
 
         scoreText.text = "FPS: " + game.time.fps;
     }
@@ -178,33 +198,40 @@
     
     
     document.onkeydown = function (ev) {
-        if(ev.keyCode == 68) //d
+        if(ev.keyCode === 68){ //d
+            Player.thisPlayer().facing = 'right';
             socket.emit('keypress', {inputId: 'right', state: true});
-        else if(ev.keyCode == 83) //s
+        } 
+        else if(ev.keyCode === 83){ //s
+            Player.thisPlayer().facing = 'down';
             socket.emit('keypress', {inputId: 'down', state: true});
-        else if(ev.keyCode == 65) //a
+        }
+        else if(ev.keyCode === 65) { //a
+            Player.thisPlayer().facing = 'left';
             socket.emit('keypress', {inputId: 'left', state: true});
-        else if(ev.keyCode == 87) //w
+        }
+        else if(ev.keyCode === 87){ //w
+            Player.thisPlayer().facing = 'up';
             socket.emit('keypress', {inputId: 'up', state: true});
+        }
+        else if(ev.keyCode === 32){
+            socket.emit('keypress', {inputId: 'space'});
+        }
     }
 
     document.onkeyup = function (ev) {
-        if(ev.keyCode == 68) //d
+        if(ev.keyCode === 68){ //d
             socket.emit('keypress', {inputId: 'right', state: false});
-        else if(ev.keyCode == 83) //s
+        } 
+        else if(ev.keyCode === 83){ //s
             socket.emit('keypress', {inputId: 'down', state: false});
-        else if(ev.keyCode == 65) //a
+        }
+        else if(ev.keyCode === 65) { //a
             socket.emit('keypress', {inputId: 'left', state: false});
-        else if(ev.keyCode == 87) //w
+        }
+        else if(ev.keyCode === 87){ //w
             socket.emit('keypress', {inputId: 'up', state: false});
+        }
     }
     
-    document.onclick = function(ev){
-        socket.emit('mouseclick', {
-            x: Player.thisPlayer().gameobject.x,
-            y: Player.thisPlayer().gameobject.y,
-            angle: Player.thisPlayer().gameobject.angle,
-        });
-    }
-
 </script>
