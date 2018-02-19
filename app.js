@@ -2,6 +2,8 @@ var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
 var config = require('cloud-env');
+var p2 = require('p2');
+var io = require('socket.io')(serv,{});
 
 app.get('/', function (req, res){
    res.sendFile(__dirname + '/client/index.html');
@@ -14,90 +16,75 @@ serv.listen(config.PORT, config.IP, function () {
   console.log( "Listening on " + config.IP + ", port " + config.PORT )
 });
 
+var world = new p2.World({
+    gravity:[0, 0]
+});
 
 
-//serv.listen(2001);
-//console.log("Server started");
+var boxShape = new p2.Box({width:256, height:256});
 
-// var SOCKET_LIST = {};
 
-// var Entity = function () {
-//     var self = {
-//         x: 250,
-//         y: 250,
-//         velX: 0,
-//         velY: 0,
-//         id: "",
-//         angle:0,
-//     }
-//     self.update = function () {
-//         self.updatePosition();
-//     }
+var Player = function (id) {
+    var self = {};
+    self.id = id;
 
-//     self.updatePosition = function () {
-//         self.x += self.spdX;
-//         self.y += self.spdY;
-//     }
-//     return self;
-// }
+    self.pressingRight= false;
+    self.pressingLeft= false;
+    self.pressingDown= false;
+    self.pressingUp= false;
 
-// var Player = function (id) {
-//     var self = Entity();
-//     self.id = id;
-//     self.number="" + Math.floor(10*Math.random());
-//     self.pressingRight= false;
-//     self.pressingLeft= false;
-//     self.pressingDown= false;
-//     self.pressingUp= false;
-//     self.maxspeed=10;
+    self.maxspeed = 200;
 
-//     self.updateSpd = function () {
-//         if(self.pressingRight)
-//             self.spdX = self.maxspeed;
-//         else if(self.pressingLeft)
-//             self.spdX = -self.maxspeed;
-//         else
-//             self.spdX = 0;
+    self.body = new p2.Body({
+    	mass:1,
+    	position:[250,250],
+    });
 
-//         if(self.pressingUp)
-//             self.spdY = -self.maxspeed;
-//         else if(self.pressingDown)
-//             self.spdY = self.maxspeed;
-//         else
-//             self.spdY = 0;
-//     }
+    self.body.addShape(new p2.Box({width:94, height:62}));
+    world.addBody(self.body);
 
-//     var super_update = self.update;
-//     self.update = function () {
-//         self.updateSpd();
-//         super_update();
-//     }
+    self.updateVel = function () {
+        if(self.pressingRight)
+            self.body.velocity[0] = self.maxspeed;
+        else if(self.pressingLeft)
+            self.body.velocity[0] = -self.maxspeed;
+        else
+            self.body.velocity[0] = 0;
 
-//     Player.list[id] = self;
-//     return self;
-// }
+        if(self.pressingUp)
+            self.body.velocity[1] = -self.maxspeed;
+        else if(self.pressingDown)
+            self.body.velocity[1] = self.maxspeed;
+        else
+            self.body.velocity[1] = 0;
+    }
 
-// Player.list = {};
-// Player.onConnect = function (socket) {
-//     console.log("Socket: " + socket.id);
-//     var player = Player(socket.id);
+    self.update = function () {
+        self.updateVel();
+    }
 
-//     socket.on('keypress', function (data) {
-//         if(data.inputId === 'left')
-//             player.pressingLeft = data.state;
-//         else if(data.inputId === 'right')
-//             player.pressingRight = data.state;
-//         else if(data.inputId === 'down')
-//             player.pressingDown = data.state;
-//         else if(data.inputId === 'up')
-//             player.pressingUp = data.state;
-//     });
+    Player.list[id] = self;
+    return self;
+}
+
+Player.list = {};
+
+Player.onConnect = function (socket) {
+    console.log("Socket: " + socket.id);
+    var player = Player(socket.id);
+
+    socket.on('updateServerOnMainPlayer', function (data) {
+        player.pressingLeft = data.left;
+        player.pressingRight = data.right;
+        player.pressingDown = data.down;
+        player.pressingUp = data.up;
+    });
     
-// }
+}
 
-// Player.onDisconnect = function (socket) {
-//     delete Player.list[socket.id];
-// }
+Player.onDisconnect = function (socket) {
+    delete Player.list[socket.id];
+}
 
 // Player.update = function () {
 //     var pack = [];
@@ -114,36 +101,34 @@ serv.listen(config.PORT, config.IP, function () {
 //     return pack;
 // }
 
+var SOCKET_LIST = {};
 
-// var io = require('socket.io')(serv,{});
+io.sockets.on('connection', function (socket) {
+	Player.onConnect(socket);
+    SOCKET_LIST[socket.id] = socket;
+    socket.on('disconnect', function () {
+    	Player.onDisconnect(socket);
+        delete SOCKET_LIST[socket.id];
+    });
+});
 
-// io.sockets.on('connection', function (socket) {
-//     //socket.id = Math.random();
+var lastTime = Date.now();
+setInterval(function () {
+	var delta = Date.now()- lastTime;
+	lastTime = Date.now();
+	world.step(delta/1000);
+	for(var i in Player.list){
+        var player = Player.list[i];
+        player.update();
+    }
+}, 1000/60);
 
-//     SOCKET_LIST[socket.id] = socket;
-
-//     Player.onConnect(socket);
-
-//     socket.on('disconnect', function () {
-//         delete SOCKET_LIST[socket.id];
-//         Player.onDisconnect(socket);
-//     });
-
-
-
-// });
-
-// setInterval(function () {
-//     var pack = {
-//         player: Player.update(),
-//         bullet: Bullet.update(),
-//     }
+setInterval(function () {
+    for(var i in Player.list){
+        var player = Player.list[i];
+        console.log("X: " + player.body.position[0]);
+        SOCKET_LIST[i].emit('updateClientOnMainPlayer', player.body.position);
+    }
 
 
-//     for(var i in SOCKET_LIST){
-//         var socket = SOCKET_LIST[i];
-//         socket.emit('newPosition', pack);
-
-//     }
-
-// }, 1000/60);
+}, 1000/20);

@@ -5,6 +5,7 @@
 <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
+    var socket;
     var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, 'gameWindow', { preload: preload, create: create, update: update });
     window.addEventListener('resize', function(){
         game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
@@ -22,12 +23,13 @@
 
     var Player = function(id){
         var self = {
-            gameobject: game.add.sprite(30, 30, 'dude'),
+            gameobject: game.add.sprite(250, 250, 'dude'),
             ID: id,
             toDelete: false,
             thisPlayer : false,
         }
-
+        self.targetX = 250;
+        self.targetY = 250;
         self.gameobject.scale.setTo(0.3);
         self.gameobject.anchor.x = 100.0/313;
         self.gameobject.anchor.y = 120.0/207;
@@ -40,6 +42,7 @@
 
     Player.list = {};
 
+    var timer
     Player.create = function (id) {
         var player = Player(id);
         game.physics.p2.enable(player.gameobject);
@@ -76,6 +79,31 @@
         }
     }
 
+    Player.updateTargetPos = function(newPos){
+        Player.thisPlayer.targetX = newPos[0];
+        Player.thisPlayer.targetY = newPos[1];
+    }
+    Player.interpolateMainPlayer = function (){
+        var oldX = Player.thisPlayer.gameobject.body.x;
+        var oldY = Player.thisPlayer.gameobject.body.y;
+        var targX = Player.thisPlayer.targetX;
+        var targY = Player.thisPlayer.targetY;
+        var stationaryX = Player.thisPlayer.gameobject.body.velocity.x === 0;
+        var stationaryY = Player.thisPlayer.gameobject.body.velocity.y === 0;
+        if(Math.abs(targX - oldX) > 70){
+            //game.add.tween(Player.thisPlayer.gameobject).to({x: newPos[0]}, 1000/30);
+            Player.thisPlayer.gameobject.body.x = targX;
+        }
+
+        if(Math.abs(targY - oldY) > 70){
+            Player.thisPlayer.gameobject.body.y = targY;
+        }
+    }
+
+    Player.updateServer = function(){
+        socket.emit('updateServerOnMainPlayer', Inputs);
+        console.log("X: " + Player.thisPlayer.gameobject.body.x);
+    }
     
 
 
@@ -85,10 +113,12 @@
         game.load.image('tile', '/assets/tile.png');
         game.load.image('dude', '/assets/player.png');
         game.load.image('block', '/assets/block.png');
+        game.load.image('grass', '/assets/grass.png');
     }
     
     var scoreText;
     var player;
+    var testp2;
 
     function create() {
         game.world.setBounds(0, 0, 10000, 10000);
@@ -102,16 +132,12 @@
 
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
         Player.initThisPlayer();
-    }
-    
+        socket = io();
+        socket.on('updateClientOnMainPlayer', Player.updateTargetPos);
 
+        game.time.events.loop(1000, Player.updateServer, this);
 
-    function update(){
-        scoreText.text = 'FPS: ' + game.time.fps;
-        Player.updateLocalMovement();
-    }
-    
-    document.onkeydown = function (ev) {
+        document.onkeydown = function (ev) {
         if(ev.keyCode === 68){ //d
             Inputs.right = true;
         } 
@@ -124,8 +150,10 @@
         else if(ev.keyCode === 87){ //w
             Inputs.up = true;
         }
+                    Player.updateServer();
     }
     document.onkeyup = function (ev) {
+
         if(ev.keyCode === 68){ //d
             Inputs.right = false;
         } 
@@ -138,6 +166,19 @@
         else if(ev.keyCode === 87){ //w
             Inputs.up = false;
         }
+                Player.updateServer();
     }
+
+    }
+    
+
+
+    function update(){
+        scoreText.text = 'FPS: ' + game.time.fps;
+        Player.updateLocalMovement();
+        Player.interpolateMainPlayer();
+    }
+    
+    //Handle key inputs
 
 </script>
