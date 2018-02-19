@@ -62,20 +62,20 @@
         Player.thisPlayer.gameobject.body.velocity.x = 0;
         if (Inputs.left)
         {
-            Player.thisPlayer.gameobject.body.velocity.x = -200;
+            Player.thisPlayer.gameobject.body.velocity.x = -150;
         }
         else if (Inputs.right)
         {
-            Player.thisPlayer.gameobject.body.velocity.x = 200;
+            Player.thisPlayer.gameobject.body.velocity.x = 150;
         }
 
         if (Inputs.up)
         {
-            Player.thisPlayer.gameobject.body.velocity.y = -200;
+            Player.thisPlayer.gameobject.body.velocity.y = -150;
         }
         else if (Inputs.down)
         {
-            Player.thisPlayer.gameobject.body.velocity.y = 200;
+            Player.thisPlayer.gameobject.body.velocity.y = 150;
         }
     }
 
@@ -90,14 +90,25 @@
         var targY = Player.thisPlayer.targetY;
         var stationaryX = Player.thisPlayer.gameobject.body.velocity.x === 0;
         var stationaryY = Player.thisPlayer.gameobject.body.velocity.y === 0;
-        if(Math.abs(targX - oldX) > 70){
-            //game.add.tween(Player.thisPlayer.gameobject).to({x: newPos[0]}, 1000/30);
-            Player.thisPlayer.gameobject.body.x = targX;
-        }
+        Player.thisPlayer.gameobject.body.x = targX;
+        Player.thisPlayer.gameobject.body.y = targY;
+        // if(Math.abs(targX - oldX) > 20){
+        //     game.add.tween(Player.thisPlayer.gameobject).to({x: targX}, 1000/30);
+        //     Player.thisPlayer.gameobject.body.x = targX;
+        // }
 
-        if(Math.abs(targY - oldY) > 70){
-            Player.thisPlayer.gameobject.body.y = targY;
-        }
+        // if(Math.abs(targY - oldY) > 70){
+        //     Player.thisPlayer.gameobject.body.y = targY;
+        // }
+
+        // if(stationaryX && Math.abs(targX - oldX) > 2){
+        //     //game.add.tween(Player.thisPlayer.gameobject).to({x: targX}, 1000/10);
+        //     Player.thisPlayer.gameobject.body.x = targX;
+        // }
+
+        // if(stationaryX && Math.abs(targY - oldY) > 2){
+        //     Player.thisPlayer.gameobject.body.y = targY;
+        // }
     }
 
     Player.updateServer = function(){
@@ -150,7 +161,7 @@
         else if(ev.keyCode === 87){ //w
             Inputs.up = true;
         }
-                    Player.updateServer();
+        Player.updateServer();
     }
     document.onkeyup = function (ev) {
 
@@ -166,7 +177,7 @@
         else if(ev.keyCode === 87){ //w
             Inputs.up = false;
         }
-                Player.updateServer();
+        Player.updateServer();
     }
 
     }
@@ -175,7 +186,7 @@
 
     function update(){
         scoreText.text = 'FPS: ' + game.time.fps;
-        Player.updateLocalMovement();
+        //Player.updateLocalMovement();
         Player.interpolateMainPlayer();
     }
     

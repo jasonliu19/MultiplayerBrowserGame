@@ -33,7 +33,7 @@ var Player = function (id) {
     self.pressingDown= false;
     self.pressingUp= false;
 
-    self.maxspeed = 200;
+    self.maxspeed = 150;
 
     self.body = new p2.Body({
     	mass:1,
@@ -116,11 +116,11 @@ var lastTime = Date.now();
 setInterval(function () {
 	var delta = Date.now()- lastTime;
 	lastTime = Date.now();
-	world.step(delta/1000);
 	for(var i in Player.list){
         var player = Player.list[i];
         player.update();
     }
+	world.step(delta/1000);
 }, 1000/60);
 
 setInterval(function () {
