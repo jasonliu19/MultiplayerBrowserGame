@@ -21,6 +21,7 @@
         left: false,
     }
 
+
     var Player = function(id){
         var self = {
             gameobject: game.add.sprite(250, 250, 'dude'),
@@ -39,22 +40,40 @@
         return self;
 
     }
-
     Player.list = {};
 
     var timer
     Player.create = function (id) {
         var player = Player(id);
-        game.physics.p2.enable(player.gameobject);
-        player.gameobject.body.fixedRotation = true;
+
         return player;
     }
 
     Player.thisPlayer;
 
-    Player.initThisPlayer = function(){
-        Player.thisPlayer = Player.create(123);
+    Player.initThisPlayer = function(id){
+        Player.thisPlayer = Player.create(id);
+        game.physics.p2.enable(Player.thisPlayer.gameobject);
+        Player.thisPlayer.gameobject.body.fixedRotation = true;
+    }
 
+    Player.initNewPlayer = function(id){
+        console.log("init new player");
+        var player = Player.create(id);
+        game.physics.p2.enable(player.gameobject);
+        player.gameobject.body.fixedRotation = true;
+    }
+
+    Player.initialSpawn = function(data){
+        for(var id in data){
+            Player.initNewPlayer(id);
+        }
+        Player.updateAllTargetPos(data);
+    }
+
+    Player.onDisconnect = function(id){
+        Player.list[id].gameobject.kill();
+        delete Player.list[id];
     }
 
     Player.updateLocalMovement = function(){
@@ -79,37 +98,52 @@
         }
     }
 
-    Player.updateTargetPos = function(newPos){
-        Player.thisPlayer.targetX = newPos[0];
-        Player.thisPlayer.targetY = newPos[1];
+    Player.updateAllTargetPos = function(data){
+        for(var id in data){
+            Player.list[id].targetX = data[id][0];
+            Player.list[id].targetY = data[id][1];
+        }
     }
-    Player.interpolateMainPlayer = function (){
-        var oldX = Player.thisPlayer.gameobject.body.x;
-        var oldY = Player.thisPlayer.gameobject.body.y;
-        var targX = Player.thisPlayer.targetX;
-        var targY = Player.thisPlayer.targetY;
-        var stationaryX = Player.thisPlayer.gameobject.body.velocity.x === 0;
-        var stationaryY = Player.thisPlayer.gameobject.body.velocity.y === 0;
-        Player.thisPlayer.gameobject.body.x = targX;
-        Player.thisPlayer.gameobject.body.y = targY;
-        // if(Math.abs(targX - oldX) > 20){
-        //     game.add.tween(Player.thisPlayer.gameobject).to({x: targX}, 1000/30);
-        //     Player.thisPlayer.gameobject.body.x = targX;
-        // }
 
-        // if(Math.abs(targY - oldY) > 70){
-        //     Player.thisPlayer.gameobject.body.y = targY;
-        // }
-
-        // if(stationaryX && Math.abs(targX - oldX) > 2){
-        //     //game.add.tween(Player.thisPlayer.gameobject).to({x: targX}, 1000/10);
-        //     Player.thisPlayer.gameobject.body.x = targX;
-        // }
-
-        // if(stationaryX && Math.abs(targY - oldY) > 2){
-        //     Player.thisPlayer.gameobject.body.y = targY;
-        // }
+    Player.interpolatePlayers = function(){
+        for(var id in Player.list){
+            Player.list[id].gameobject.body.x = Player.list[id].targetX;
+            Player.list[id].gameobject.body.y = Player.list[id].targetY;
+        }
     }
+    // Player.updateTargetPos = function(newPos){
+    //     Player.thisPlayer.targetX = newPos[0];
+    //     Player.thisPlayer.targetY = newPos[1];
+    // }
+
+    // Player.interpolateMainPlayer = function (){
+    //     var oldX = Player.thisPlayer.gameobject.body.x;
+    //     var oldY = Player.thisPlayer.gameobject.body.y;
+    //     var targX = Player.thisPlayer.targetX;
+    //     var targY = Player.thisPlayer.targetY;
+    //     var stationaryX = Player.thisPlayer.gameobject.body.velocity.x === 0;
+    //     var stationaryY = Player.thisPlayer.gameobject.body.velocity.y === 0;
+    //     Player.thisPlayer.gameobject.body.x = targX;
+    //     Player.thisPlayer.gameobject.body.y = targY;
+    //     //Reenable for interpolation
+    //     if(Math.abs(targX - oldX) > 20){
+    //         game.add.tween(Player.thisPlayer.gameobject).to({x: targX}, 1000/30);
+    //         Player.thisPlayer.gameobject.body.x = targX;
+    //     }
+
+    //     if(Math.abs(targY - oldY) > 70){
+    //         Player.thisPlayer.gameobject.body.y = targY;
+    //     }
+
+    //     if(stationaryX && Math.abs(targX - oldX) > 2){
+    //         //game.add.tween(Player.thisPlayer.gameobject).to({x: targX}, 1000/10);
+    //         Player.thisPlayer.gameobject.body.x = targX;
+    //     }
+
+    //     if(stationaryX && Math.abs(targY - oldY) > 2){
+    //         Player.thisPlayer.gameobject.body.y = targY;
+    //     }
+    // }
 
     Player.updateServer = function(){
         socket.emit('updateServerOnMainPlayer', Inputs);
@@ -128,9 +162,7 @@
     }
     
     var scoreText;
-    var player;
-    var testp2;
-
+    var startGame =false;
     function create() {
         game.world.setBounds(0, 0, 10000, 10000);
         game.time.advancedTiming = true;
@@ -142,9 +174,17 @@
 
 
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
-        Player.initThisPlayer();
         socket = io();
-        socket.on('updateClientOnMainPlayer', Player.updateTargetPos);
+        socket.on('connect', function() {
+            Player.initThisPlayer(socket.id)
+            console.log("Socket: " + socket.id);
+            socket.on('updateClientOnPlayers', Player.updateAllTargetPos);
+            socket.on('newPlayer', Player.initNewPlayer);
+            socket.on('initialSpawn', Player.initialSpawn);
+            socket.on('playerDisconnect', Player.onDisconnect);
+            startGame = true;
+        });;
+
 
         game.time.events.loop(1000, Player.updateServer, this);
 
@@ -185,9 +225,11 @@
 
 
     function update(){
-        scoreText.text = 'FPS: ' + game.time.fps;
-        //Player.updateLocalMovement();
-        Player.interpolateMainPlayer();
+        if(startGame){
+            scoreText.text = 'FPS: ' + game.time.fps;
+            //Player.updateLocalMovement();
+            Player.interpolatePlayers();
+        }
     }
     
     //Handle key inputs

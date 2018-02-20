@@ -71,6 +71,9 @@ Player.list = {};
 
 Player.onConnect = function (socket) {
     console.log("Socket: " + socket.id);
+    var pack = Player.getStatusPackage();
+    socket.emit('initialSpawn', pack);
+
     var player = Player(socket.id);
 
     socket.on('updateServerOnMainPlayer', function (data) {
@@ -79,6 +82,9 @@ Player.onConnect = function (socket) {
         player.pressingDown = data.down;
         player.pressingUp = data.up;
     });
+
+    //Notify other players
+    socket.broadcast.emit('newPlayer', socket.id);
     
 }
 
@@ -86,6 +92,13 @@ Player.onDisconnect = function (socket) {
     delete Player.list[socket.id];
 }
 
+Player.getStatusPackage = function(){
+	var pack = {};
+	for(var i in Player.list){
+		pack[i] = Player.list[i].body.position;
+	}
+	return pack;
+}
 // Player.update = function () {
 //     var pack = [];
 //     for(var i in Player.list){
@@ -107,11 +120,13 @@ io.sockets.on('connection', function (socket) {
 	Player.onConnect(socket);
     SOCKET_LIST[socket.id] = socket;
     socket.on('disconnect', function () {
+    	socket.broadcast.emit('playerDisconnect', socket.id);
     	Player.onDisconnect(socket);
         delete SOCKET_LIST[socket.id];
     });
 });
 
+//Physics
 var lastTime = Date.now();
 setInterval(function () {
 	var delta = Date.now()- lastTime;
@@ -124,11 +139,10 @@ setInterval(function () {
 }, 1000/60);
 
 setInterval(function () {
-    for(var i in Player.list){
-        var player = Player.list[i];
-        console.log("X: " + player.body.position[0]);
-        SOCKET_LIST[i].emit('updateClientOnMainPlayer', player.body.position);
+    for(var i in SOCKET_LIST){
+    	var pack = Player.getStatusPackage();
+        SOCKET_LIST[i].emit('updateClientOnPlayers', pack);
     }
 
 
-}, 1000/20);
+}, 1000/40);
