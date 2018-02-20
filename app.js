@@ -13,9 +13,10 @@ app.get('/', function (req, res){
 app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
- 
+
 serv.listen(config.PORT, config.IP, function () {
   console.log( "Listening on " + config.IP + ", port " + config.PORT )
+
 	  //*****Initmap*******
 	Block.createLine(0, 600, 10, 'right', 'tree');
 	Block.createLine(1000, 0, 10, 'down', 'grass');
@@ -110,6 +111,8 @@ Player.onConnect = function (socket) {
         player.pressingUp = data.inputs.up;
         player.angle = data.angle;
     });
+    
+    var enemy = Enemy(0, 0, player.id);
 
     //Notify other players
     socket.broadcast.emit('newPlayer', socket.id);
@@ -206,7 +209,7 @@ Block.createLine = function(x, y, length, direction, texture){
 }
 
 
-var Enemy = function(x,y){
+var Enemy = function(x, y, playerid){
     var self = {};
     self.id = Math.random();
     self.maxspeed = 150;
@@ -218,14 +221,46 @@ var Enemy = function(x,y){
     	position:[x,y],
     });
 
-    self.updateVelocity = function(){
-    	
+    self.updateVelocity = function () {
+        if(Player.list[playerid].body.position[0] > x)
+            self.body.velocity[0] = self.maxspeed;
+        else if(Player.list[playerid].body.position[0] < x)
+            self.body.velocity[0] = -self.maxspeed;
+        else
+            self.body.velocity[0] = 0;
+
+        if(Player.list[playerid].body.position[1] > y)
+            self.body.velocity[1] = -self.maxspeed;
+        else if(Player.list[playerid].body.position[1] < y)
+            self.body.velocity[1] = self.maxspeed;
+        else
+            self.body.velocity[1] = 0;
+    }
+    
+    self.worldbounds = function () {
+    	if (self.body.position[0] <= 0) 
+    		if (self.body.velocity[0] < 0)
+    			self.body.velocity[0] = 0;
+    	if (self.body.position[0] >= 1840)
+    		if (self.body.velocity[0] > 0)
+    			self.body.velocity[0] = 0;
+    	if (self.body.position[1] <= 0)
+    		if (self.body.velocity[1] < 0) 
+    			self.body.velocity[1] = 0;
+    	if (self.body.position[1] >= 970)
+    		if (self.body.velocity[1] > 0)
+    			self.body.velocity[1] = 0;
     }
     
     self.update = function () {
         self.updateVelocity();
     }
+    
+    Enemy.list[self.id] = self;
+    return self;
 }
+
+Enemy.list = {};
 
 //Don't need to touch stuff below here
 var SOCKET_LIST = {};
@@ -243,7 +278,7 @@ io.sockets.on('connection', function (socket) {
 //Physics loop
 var lastTime = Date.now();
 setInterval(function () {
-	var delta = Date.now()- lastTime;
+	var delta = Date.now() - lastTime;
 	lastTime = Date.now();
 	for(var i in Player.list){
         var player = Player.list[i];
@@ -253,6 +288,13 @@ setInterval(function () {
     }
 	world.step(delta/1000);
 	Bullet.destroyOldBullets();
+    //function to path zombies
+    for(var i in Enemy.list){
+        var enemy = Enemy.list[i];
+        enemy.update();
+        //Check if enemy is out of bounds
+        enemy.worldbounds();
+    }
 }, 1000/60);
 
 //Update clients loop

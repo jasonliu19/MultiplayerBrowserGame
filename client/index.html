@@ -147,6 +147,17 @@
     }
     
     
+    var Enemy = function(id, position){
+        var self = {};
+        self.id = id;
+        self.gameobject = game.add.sprite(position[0], position[1], 'zombie');
+        Enemy.list[id] = self;
+        return self;
+    }
+    
+    Enemy.list = {};
+    
+    
     var Block = function(texture, position){
         self.gameobject = game.add.sprite(position[0], position[1], texture);
         self.gameobject.anchor.x = 0.5;
@@ -212,6 +223,8 @@
         // LOADING TILESET ASSETS
         this.load.tilemap('map', '/assets/Maps/map.csv');
         this.load.image('tiles', '/assets/Maps/wood_tileset.png');
+
+        game.load.image('zombie', '/assets/zombie.png')
     }
     
     var scoreText;
@@ -250,6 +263,7 @@
             socket.on('playerDisconnect', Player.onDisconnect);
             socket.on('bulletCreate', Bullet.initNewBullet);
             socket.on('createMap', Block.makeMap);
+            Enemy(1, [20, 20]);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
 
