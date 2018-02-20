@@ -4,6 +4,8 @@ var serv = require('http').Server(app);
 var config = require('cloud-env');
 var p2 = require('p2');
 var io = require('socket.io')(serv,{});
+var GAMEBOUNDX = 1920;
+var GAMRBOUNDY = 1080;
 
 app.get('/', function (req, res){
    res.sendFile(__dirname + '/client/index.html');
@@ -57,6 +59,21 @@ var Player = function (id) {
             self.body.velocity[1] = self.maxspeed;
         else
             self.body.velocity[1] = 0;
+    }
+
+    self.worldbounds = function () {
+    	if (self.body.position[0] <= 0) 
+    		if (self.body.velocity[0] < 0)
+    			self.body.velocity[0] = 0;
+    	if (self.body.position[0] >= 1840)
+    		if (self.body.velocity[0] > 0)
+    			self.body.velocity[0] = 0;
+    	if (self.body.position[1] <= 0)
+    		if (self.body.velocity[1] < 0) 
+    			self.body.velocity[1] = 0;
+    	if (self.body.position[1] >= 970)
+    		if (self.body.velocity[1] > 0)
+    			self.body.velocity[1] = 0;
     }
 
     self.update = function () {
@@ -163,6 +180,7 @@ setInterval(function () {
 	for(var i in Player.list){
         var player = Player.list[i];
         player.update();
+        player.worldbounds();
     }
 	world.step(delta/1000);
 	Bullet.destroyOldBullets();
