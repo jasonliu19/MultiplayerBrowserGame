@@ -41,6 +41,7 @@
         self.gameobject.scale.setTo(0.3);
         self.gameobject.anchor.x = 100.0/313;
         self.gameobject.anchor.y = 120.0/207;
+        self.healthpoints = 100;
 
         Player.list[id] = self;
         
@@ -79,6 +80,14 @@
     Player.updateAllTargetStatuses = function(data){
         Player.updateAllTargetPositions(data);
         Player.updateOtherTargetAngles(data);
+        Player.updateAllHealthPoints(data);
+    }
+
+
+    Player.updateAllHealthPoints = function(data){
+        for (var id in data){
+            Player.list[id].healhpoints = data[id].healthpoints; 
+        }
     }
 
     Player.updateAllTargetPositions = function(data){
@@ -197,6 +206,7 @@
     }
     
     var scoreText;
+    var healthpoints;
     var startGame =false;
 
     //Initializes game
@@ -210,7 +220,9 @@
         game.physics.startSystem(Phaser.Physics.P2JS);
 
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
-        
+
+        healthpoints = game.add.text(16, 45, 'Healthpoints: ', { fontSize: '32px', fill: '#000' });
+
         socket = io();
         socket.on('connect', function() {
             Player.initThisPlayer(socket.id)
@@ -269,6 +281,7 @@
     function update(){
         if(startGame){
             scoreText.text = 'FPS: ' + game.time.fps;
+            healthpoints.text = 'Healthpoints: ' + Player.thisPlayer.healthpoints;
             Player.updateAllPositons();
             Player.updateAllRotations();
             Bullet.destroyOldBullets();
