@@ -5,8 +5,13 @@
 <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
+    //Socket instance, initialized in create()
     var socket;
+
+    //Initialize phaser game
     var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, 'gameWindow', { preload: preload, create: create, update: update });
+
+    //*Supposed* to resize the window, doesn't work that well
     window.addEventListener('resize', function(){
         game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
         game.scale.setGameSize(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio);
@@ -14,6 +19,7 @@
     });
 
 
+    //Keeps track of inputs
     var Inputs = {
         up: false,
         down: false,
@@ -22,13 +28,13 @@
     }
 
 
+    //Player class
     var Player = function(id){
-        var self = {
-            gameobject: game.add.sprite(250, 250, 'dude'),
-            ID: id,
-            toDelete: false,
-            thisPlayer : false,
-        }
+        var self = {};
+        self.gameobject = game.add.sprite(250, 250, 'dude');
+        self.ID = id;
+        self.toDelete = false;
+        self.thisPlayer  = false;
         self.targetX = 250;
         self.targetY = 250;
         self.targetAngle = 0;
@@ -43,33 +49,23 @@
     }
     Player.list = {};
 
-    Player.create = function (id) {
-        var player = Player(id);
-
-        return player;
-    }
-
     Player.thisPlayer;
 
     Player.initThisPlayer = function(id){
-        Player.thisPlayer = Player.create(id);
+        Player.thisPlayer = Player(id);
         Player.thisPlayer.thisPlayer = true;
-        // game.physics.p2.enable(Player.thisPlayer.gameobject);
-        // Player.thisPlayer.gameobject.body.fixedRotation = true;
     }
 
     Player.initNewPlayer = function(id){
-        console.log("init new player");
-        var player = Player.create(id);
-        // game.physics.p2.enable(player.gameobject);
-        // player.gameobject.body.fixedRotation = true;
+        console.log("Init new player with ID: " + id);
+        var player = Player(id);
     }
 
-    Player.initialSpawn = function(data){
+    Player.onInitialJoinPopulatePlayers = function(data){
         for(var id in data){
             Player.initNewPlayer(id);
         }
-        Player.updateAllTargetPos(data);
+        Player.updateAllTargetPositions(data);
     }
 
     Player.onDisconnect = function(id){
@@ -77,44 +73,18 @@
         delete Player.list[id];
     }
 
-    // Player.updateLocalMovement = function(){
-    //     Player.thisPlayer.gameobject.y = 0;
-    //     Player.thisPlayer.gameobject.x = 0;
-    //     if (Inputs.left)
-    //     {
-    //         Player.thisPlayer.gameobject.x = -150;
-    //     }
-    //     else if (Inputs.right)
-    //     {
-    //         Player.thisPlayer.gameobject.x = 150;
-    //     }
 
-    //     if (Inputs.up)
-    //     {
-    //         Player.thisPlayer.gameobject.y = -150;
-    //     }
-    //     else if (Inputs.down)
-    //     {
-    //         Player.thisPlayer.gameobject.y = 150;
-    //     }
-    // }
 
+    //Sets target positions and rotations for every player object based on server data
     Player.updateAllTargetStatuses = function(data){
-        Player.updateAllTargetPos(data);
+        Player.updateAllTargetPositions(data);
         Player.updateOtherTargetAngles(data);
     }
 
-    Player.updateAllTargetPos = function(data){
+    Player.updateAllTargetPositions = function(data){
         for(var id in data){
             Player.list[id].targetX = data[id].position[0];
             Player.list[id].targetY = data[id].position[1];
-        }
-    }
-
-    Player.interpolatePlayers = function(){
-        for(var id in Player.list){
-            Player.list[id].gameobject.x = Player.list[id].targetX;
-            Player.list[id].gameobject.y = Player.list[id].targetY;
         }
     }
 
@@ -125,6 +95,8 @@
             }
         }
     }
+
+    //Handles the actual position updates
     Player.updateSelfRotation = function(){
             //Mouse rotation
             var x = game.camera.x + game.input.mousePointer.x;
@@ -149,39 +121,14 @@
         }
         Player.updateSelfRotation();
     }
-    // Player.updateTargetPos = function(newPos){
-    //     Player.thisPlayer.targetX = newPos[0];
-    //     Player.thisPlayer.targetY = newPos[1];
-    // }
 
-    // Player.interpolateMainPlayer = function (){
-    //     var oldX = Player.thisPlayer.gameobject.body.x;
-    //     var oldY = Player.thisPlayer.gameobject.body.y;
-    //     var targX = Player.thisPlayer.targetX;
-    //     var targY = Player.thisPlayer.targetY;
-    //     var stationaryX = Player.thisPlayer.gameobject.x === 0;
-    //     var stationaryY = Player.thisPlayer.gameobject.body.velocity.y === 0;
-    //     Player.thisPlayer.gameobject.body.x = targX;
-    //     Player.thisPlayer.gameobject.body.y = targY;
-    //     //Reenable for interpolation
-    //     if(Math.abs(targX - oldX) > 20){
-    //         game.add.tween(Player.thisPlayer.gameobject).to({x: targX}, 1000/30);
-    //         Player.thisPlayer.gameobject.body.x = targX;
-    //     }
 
-    //     if(Math.abs(targY - oldY) > 70){
-    //         Player.thisPlayer.gameobject.body.y = targY;
-    //     }
-
-    //     if(stationaryX && Math.abs(targX - oldX) > 2){
-    //         //game.add.tween(Player.thisPlayer.gameobject).to({x: targX}, 1000/10);
-    //         Player.thisPlayer.gameobject.body.x = targX;
-    //     }
-
-    //     if(stationaryX && Math.abs(targY - oldY) > 2){
-    //         Player.thisPlayer.gameobject.body.y = targY;
-    //     }
-    // }
+    Player.updateAllPositons = function(){
+        for(var id in Player.list){
+            Player.list[id].gameobject.x = Player.list[id].targetX;
+            Player.list[id].gameobject.y = Player.list[id].targetY;
+        }
+    }
 
     Player.updateServer = function(){
         socket.emit('updateServerOnMainPlayer', {inputs: Inputs, angle: Player.thisPlayer.gameobject.angle});
@@ -190,9 +137,10 @@
     
 
 
-    //Phaser functions
-    function preload() {
+    //Main phaser functions
 
+    //Loads assets
+    function preload() {
         game.load.image('tile', '/assets/tile.png');
         game.load.image('dude', '/assets/player.png');
         game.load.image('block', '/assets/block.png');
@@ -201,76 +149,72 @@
     
     var scoreText;
     var startGame =false;
+
+    //Initializes game
     function create() {
-        game.world.setBounds(0, 0, 10000, 10000);
+        game.world.setBounds(0, 0, 1920, 1080);
         game.time.advancedTiming = true;
         game.stage.disableVisibilityChange = true;
         game.stage.backgroundColor = '#95BCC7';
         game.add.tileSprite(0,0,game.width, game.height, 'tile');
-
-//        game.physics.startSystem(Phaser.Physics.P2JS);
-
-
+        
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
+        
         socket = io();
         socket.on('connect', function() {
             Player.initThisPlayer(socket.id)
             console.log("Socket: " + socket.id);
             socket.on('updateClientOnPlayers', Player.updateAllTargetStatuses);
             socket.on('newPlayer', Player.initNewPlayer);
-            socket.on('initialSpawn', Player.initialSpawn);
+            socket.on('onInitialJoinPopulatePlayers', Player.onInitialJoinPopulatePlayers);
             socket.on('playerDisconnect', Player.onDisconnect);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
 
-        });;
 
+            //Handle key inputs
+            document.onkeydown = function (ev) {
+                if(ev.keyCode === 68){ //d
+                    Inputs.right = true;
+                } 
+                else if(ev.keyCode === 83){ //s
+                    Inputs.down = true;
+                }
+                else if(ev.keyCode === 65) { //a
+                    Inputs.left = true;
+                }
+                else if(ev.keyCode === 87){ //w
+                    Inputs.up = true;
+                }
+                Player.updateServer();
+            }
+            document.onkeyup = function (ev) {
 
-        document.onkeydown = function (ev) {
-        if(ev.keyCode === 68){ //d
-            Inputs.right = true;
-        } 
-        else if(ev.keyCode === 83){ //s
-            Inputs.down = true;
-        }
-        else if(ev.keyCode === 65) { //a
-            Inputs.left = true;
-        }
-        else if(ev.keyCode === 87){ //w
-            Inputs.up = true;
-        }
-        Player.updateServer();
-    }
-    document.onkeyup = function (ev) {
-
-        if(ev.keyCode === 68){ //d
-            Inputs.right = false;
-        } 
-        else if(ev.keyCode === 83){ //s
-            Inputs.down = false;
-        }
-        else if(ev.keyCode === 65) { //a
-            Inputs.left = false;
-        }
-        else if(ev.keyCode === 87){ //w
-            Inputs.up = false;
-        }
-        Player.updateServer();
-    }
-
+                if(ev.keyCode === 68){ //d
+                    Inputs.right = false;
+                } 
+                else if(ev.keyCode === 83){ //s
+                    Inputs.down = false;
+                }
+                else if(ev.keyCode === 65) { //a
+                    Inputs.left = false;
+                }
+                else if(ev.keyCode === 87){ //w
+                    Inputs.up = false;
+                }
+                Player.updateServer();
+            }
+        });
     }
     
 
-
+    //Main render loop
     function update(){
         if(startGame){
             scoreText.text = 'FPS: ' + game.time.fps;
-            //Player.updateLocalMovement();
-            Player.interpolatePlayers();
+            Player.updateAllPositons();
             Player.updateAllRotations();
         }
     }
-    
-    //Handle key inputs
 
 </script>

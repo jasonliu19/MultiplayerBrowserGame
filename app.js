@@ -21,9 +21,7 @@ var world = new p2.World({
 });
 
 
-var boxShape = new p2.Box({width:256, height:256});
-
-
+//Server player class
 var Player = function (id) {
     var self = {};
     self.id = id;
@@ -72,12 +70,13 @@ var Player = function (id) {
 Player.list = {};
 
 Player.onConnect = function (socket) {
-    console.log("Socket: " + socket.id);
-    var pack = Player.getStatusPackage();
-    socket.emit('initialSpawn', pack);
+    console.log("Socket connected with ID: " + socket.id);
+
+    var otherPlayersData = Player.generateCurrentStatusPackage();
+    socket.emit('onInitialJoinPopulatePlayers', otherPlayersData);
+
 
     var player = Player(socket.id);
-
     socket.on('updateServerOnMainPlayer', function (data) {
         player.pressingLeft = data.inputs.left;
         player.pressingRight = data.inputs.right;
@@ -95,7 +94,7 @@ Player.onDisconnect = function (socket) {
     delete Player.list[socket.id];
 }
 
-Player.getStatusPackage = function(){
+Player.generateCurrentStatusPackage = function(){
 	var pack = {};
 	for(var i in Player.list){
 		pack[i] = {
@@ -105,23 +104,10 @@ Player.getStatusPackage = function(){
 	}
 	return pack;
 }
-// Player.update = function () {
-//     var pack = [];
-//     for(var i in Player.list){
-//         var player = Player.list[i];
-//         player.update();
-//         pack.push({
-//             x:player.x,
-//             y:player.y,
-//             id:player.id,
-//         });
-
-//     }
-//     return pack;
-// }
 
 var SOCKET_LIST = {};
 
+//Handle initial socket connection
 io.sockets.on('connection', function (socket) {
 	Player.onConnect(socket);
     SOCKET_LIST[socket.id] = socket;
@@ -132,7 +118,7 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
-//Physics
+//Physics loop
 var lastTime = Date.now();
 setInterval(function () {
 	var delta = Date.now()- lastTime;
@@ -144,11 +130,10 @@ setInterval(function () {
 	world.step(delta/1000);
 }, 1000/60);
 
+//Update clients loop
 setInterval(function () {
     for(var i in SOCKET_LIST){
-    	var pack = Player.getStatusPackage();
+    	var pack = Player.generateCurrentStatusPackage();
         SOCKET_LIST[i].emit('updateClientOnPlayers', pack);
     }
-
-
 }, 1000/40);
