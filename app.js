@@ -213,7 +213,7 @@ var Enemy = function(x,y){
     	position:[x,y],
     });
 
-    self.updateVelocity(){
+    self.updateVelocity = function(){
     	
     }
     
