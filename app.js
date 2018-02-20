@@ -14,8 +14,8 @@ app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
 
-serv.listen(8006, config.IP, function () {
-  console.log( "Listening on " + config.IP + ", port " + 8006 )
+serv.listen(config.PORT, config.IP, function () {
+  console.log( "Listening on " + config.IP + ", port " + config.PORT )
 
 	  //*****Initmap*******
 	Block.createLine(0, 600, 10, 'right', 'tree');
@@ -107,7 +107,8 @@ Player.onConnect = function (socket) {
     socket.on('updateServerOnMainPlayer', function (data) {
         player.pressingLeft = data.inputs.left;
         player.pressingRight = data.inputs.right;
-        player.pressingDown = data.inputs.down;
+        player.pressingDown = data.inputs.down;      self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
         player.pressingUp = data.inputs.up;
         player.angle = data.angle;
     });
