@@ -13,9 +13,13 @@ app.get('/', function (req, res){
 app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
+var PLAYER = Math.pow(2,0);
+var ENEMY = Math.pow(2,1);
+var BULLET = Math.pow(2,2);
+var BLOCK = Math.pow(2,3);
 
-serv.listen(8006, config.IP, function () {
-  console.log( "Listening on " + config.IP + ", port " + 8006 )
+serv.listen(config.PORT, config.IP, function () {
+  console.log( "Listening on " + config.IP + ", port " + config.PORT )
 
 	  //*****Initmap*******
 	Block.createLine(0, 600, 10, 'right', 'tree');
@@ -27,6 +31,7 @@ var world = new p2.World({
     gravity:[0, 0]
 });
 
+var GUNDAMAGE = 34;
 var BLOCKSIZE = 64;
 var DEFAULTBLOCKTEXTURE = 'grass';
 
@@ -51,7 +56,11 @@ var Player = function (id) {
 
     self.heatlhpoints = 100;
 
-    self.body.addShape(new p2.Box({width:64, height:64}));
+    var bodyShape = new p2.Box({width:64, height:64});
+    bodyShape.collisionGroup = PLAYER;
+    bodyShape.collisionMask = ENEMY | BLOCK | PLAYER;
+    self.body.addShape(bodyShape);
+
     world.addBody(self.body);
 
     self.updateVel = function () {
@@ -112,7 +121,7 @@ Player.onConnect = function (socket) {
         player.angle = data.angle;
     });
     
-    Enemy.initializeEnemy(socket.id, 20, 20);
+    Enemy.initializeEnemy(socket.id);
     
     var enemyData = Enemy.generateCurrentStatusPackage();
     socket.emit('onInitialJoinPopulateZombies', enemyData)
@@ -125,6 +134,7 @@ Player.onConnect = function (socket) {
 
 Player.onDisconnect = function (socket) {
     Enemy.onPlayerDisconnect(socket.id);
+    world.removeBody(Player.list[socket.id].body);
     delete Player.list[socket.id];
 }
 
@@ -145,15 +155,22 @@ var Bullet = function(angle, position){
 	var self = {};
 	self.id = Math.random();
 	self.maxspeed = 1200;
+	self.used = false;
 	self.body = new p2.Body({
 		mass : 1,
 		position : position,
 		angle: angle,
 		velocity: [Math.cos(angle/180*Math.PI) * self.maxspeed, Math.sin(angle/180*Math.PI) * self.maxspeed]
 	});
-	self.body.addShape(new p2.Box({width:8, height:32}));
+	self.body.id = self.id;
+	var bulletshape = new p2.Box({width:8, height:32});
+	bulletshape.collisionGroup = BULLET;
+	bulletshape.collisionMask = BULLET | ENEMY | BLOCK;
+	self.body.addShape(bulletshape);
+	world.addBody(self.body);
 	self.timeAlive = 0;
 	Bullet.array[self.id] = self;
+	return self;
 }
 
 Bullet.array = {};
@@ -169,10 +186,19 @@ Bullet.destroyOldBullets = function(){
 }
 
 Bullet.handleCreateRequest = function(data){
-	Bullet(data.angle, data.position);
+	var bullet = Bullet(data.angle, data.position);
+	data[id] = bullet.id;
 	for(var id in SOCKET_LIST){
 		SOCKET_LIST[id].emit('bulletCreate', data);
 	}
+}
+
+Bullet.delete = function(id){
+	//world.removeBody(Bullet.array[id].body);
+	delete Bullet.array[id];
+    for(i in SOCKET_LIST){
+        SOCKET_LIST[i].emit('deleteBullet', id);
+    }
 }
 
 var Block = function(x,y,texture){
@@ -182,7 +208,10 @@ var Block = function(x,y,texture){
     	position:[x,y],
     	type: p2.Body.KINEMATIC
     });
-    self.body.addShape(new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE}));
+    var blockShape = new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE});
+    blockShape.collisionGroup = BLOCK;
+    blockShape.collisionMask = ENEMY | PLAYER | BULLET;
+    self.body.addShape(blockShape);
     world.addBody(self.body);
     Block.list.push(self);
     return self;
@@ -217,14 +246,21 @@ var Enemy = function(x, y, playerid){
     self.id = Math.random();
     self.maxspeed = 75;
     self.playerid = playerid;
+    self.healthpoints = 100;
 
     self.angle = 0;
 
     self.body = new p2.Body({
     	mass:1,
-    	position:[x,y],
+    	position:[x,y]
     });
-    self.body.addShape(new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE}));
+
+    self.body.id = self.id;
+
+    var enemyshape = new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE});
+    enemyshape.collisionGroup = ENEMY;
+    enemyshape.collisionMask = ENEMY | PLAYER | BLOCK | BULLET;
+    self.body.addShape(enemyshape);
     world.addBody(self.body);
 
     self.updateVelocity = function () {
@@ -261,6 +297,13 @@ var Enemy = function(x, y, playerid){
     self.update = function () {
         self.updateVelocity();
     }
+
+    self.decreaseHealth = function(){
+    	self.healthpoints -= GUNDAMAGE;
+    	if(self.healthpoints <= 0){
+    		Enemy.destroy(self.id);
+    	}
+    }
     
     Enemy.list[self.id] = self;
     return self;
@@ -268,33 +311,10 @@ var Enemy = function(x, y, playerid){
 
 Enemy.list = {};
 
-Enemy.initializeEnemy = function(playerid, x, y) {
-    var enemy = Enemy(x, y, playerid);
+Enemy.initializeEnemy = function(id) {
+    var enemy = Enemy(20, 20, id);
     for(i in SOCKET_LIST){
-        SOCKET_LIST[i].emit('createEnemy', {id: enemy.id, position: [x, y]});
-    }
-}
-
-Enemy.randomGenerateEnemy = function() {
-    for(i in Player.list){
-        var spawnSide = Math.floor((Math.random() * 4) + 1);
-        var x = 10;
-        var y = 10;
-        if(spawnSide == 0) {
-            x = 960;
-        }
-        else if(spawnSide == 1) {
-            x = 960;
-            y = 1070;
-        }
-        else if(spawnSide == 2) {
-            y = 540;
-        }
-        else {
-            x = 1910;
-            y = 540;
-        }
-        Enemy.initializeEnemy(i, x, y);
+        SOCKET_LIST[i].emit('createEnemy', {id: enemy.id, position: [20, 20]});
     }
 }
 
@@ -317,11 +337,13 @@ Enemy.onPlayerDisconnect = function(playerid){
 }
 
 Enemy.destroy = function(enemyid){
+    world.removeBody(Enemy.list[enemyid].body);
     delete Enemy.list[enemyid];
     for(i in SOCKET_LIST){
         SOCKET_LIST[i].emit('deleteEnemy', enemyid);
     }
 }
+
 
 
 //Don't need to touch stuff below here
@@ -339,8 +361,6 @@ io.sockets.on('connection', function (socket) {
 
 //Physics loop
 var lastTime = Date.now();
-var counter = 0;
-
 setInterval(function () {
 	var delta = Date.now() - lastTime;
 	lastTime = Date.now();
@@ -359,12 +379,6 @@ setInterval(function () {
         //Check if enemy is out of bounds
         enemy.worldbounds();
     }
-    // randomly spawning enemies
-    if(counter == 1000) {
-        counter -= 1000;
-        Enemy.randomGenerateEnemy();
-    }
-    counter++;
 }, 1000/60);
 
 //Update clients loop
@@ -376,3 +390,24 @@ setInterval(function () {
         SOCKET_LIST[i].emit('updateClientOnEnemies', pack);
     }
 }, 1000/40);
+
+
+world.on("impact",function(evt){
+    var bodyA = evt.bodyA,
+        bodyB = evt.bodyB;
+
+   if((bodyA.shapes[0].collisionGroup == BULLET || bodyB.shapes[0].collisionGroup == BULLET)
+   	&&(bodyA.shapes[0].collisionGroup == ENEMY || bodyB.shapes[0].collisionGroup == ENEMY)){
+   		var bulletBody, otherBody;
+   		if (bodyA.shapes[0].collisionGroup == BULLET) {
+    		bulletBody = bodyA;
+   			otherbody = bodyB;
+   		} else {
+    		bulletBody = bodyB;
+   			otherbody = bodyA;
+   		}
+   		world.removeBody(bulletBody);
+   		world.removeBody(otherbody);
+   		//Enemy.list[otherbody.id].decreaseHealth();
+    }
+});

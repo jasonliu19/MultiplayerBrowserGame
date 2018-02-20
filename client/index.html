@@ -5,6 +5,8 @@
 <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
+
+
     //Socket instance, initialized in create()
     var socket;
 
@@ -32,6 +34,8 @@
     var Player = function(id){
         var self = {};
         self.gameobject = game.add.sprite(250, 250, 'dude');
+        self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
         self.ID = id;
         self.toDelete = false;
         self.thisPlayer  = false;
@@ -149,12 +153,9 @@
         var self = {};
         self.id = id;
         self.gameobject = game.add.sprite(position[0], position[1], 'zombie');
-        self.gameobject.anchor.x = 0.5;
-        self.gameobject.anchor.y = 0.5;
         self.targetX = position[0];
         self.targetY = position[1];
         Enemy.list[id] = self;
-
         return self;
     }
     
@@ -162,12 +163,21 @@
     
     Enemy.createEnemy = function(data) {
         Enemy(data.id, data.position);
+        console.log("received enemy");
     }
     
     Enemy.updateAllTargetStatuses = function(data){
         Enemy.updateAllTargetPositions(data);
+        Enemy.updateAllHealthPoints(data);
     }
     
+
+    Enemy.updateAllHealthPoints = function(data){
+        for (var id in data){
+            Enemy.list[id].healhpoints = data[id].healthpoints; 
+        }
+    }
+
     Enemy.updateAllTargetPositions = function(data){
         for(var id in data){
             Enemy.list[id].targetX = data[id].position[0];
@@ -209,9 +219,9 @@
     }
     
 
-    var Bullet = function(angle, position){
+    var Bullet = function(angle, position, id){
         var self = {};
-        self.id = Math.random();
+        self.id = id;
         self.maxspeed = 1200;
         self.gameobject = game.add.sprite(position[0],position[1], 'bullet');
         self.gameobject.anchor.x = 0.5;
@@ -238,7 +248,11 @@
     }
 
     Bullet.initNewBullet = function(data){
-        Bullet(data.angle, data.position);
+        Bullet(data.angle, data.position, data.id);
+    }
+    Bullet.destroy = function (id) {
+        Bullet.list[id].gameobject.kill();
+        delete Bullet.list[id];
     }
 
     Bullet.requestServerForBullet = function(){
@@ -302,6 +316,7 @@
             socket.on('deleteEnemy', Enemy.delete);
             socket.on('playerDisconnect', Player.onDisconnect);
             socket.on('bulletCreate', Bullet.initNewBullet);
+            socket.on('deleteBullet', Bullet.destroy);
             socket.on('createMap', Block.makeMap);
             socket.on('createEnemy', Enemy.createEnemy);
             socket.on('updateClientOnEnemies', Enemy.updateAllTargetStatuses);
