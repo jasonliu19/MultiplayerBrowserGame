@@ -107,8 +107,7 @@ Player.onConnect = function (socket) {
     socket.on('updateServerOnMainPlayer', function (data) {
         player.pressingLeft = data.inputs.left;
         player.pressingRight = data.inputs.right;
-        player.pressingDown = data.inputs.down;      self.gameobject.anchor.x = 0.5;
-        self.gameobject.anchor.y = 0.5;
+        player.pressingDown = data.inputs.down;
         player.pressingUp = data.inputs.up;
         player.angle = data.angle;
     });

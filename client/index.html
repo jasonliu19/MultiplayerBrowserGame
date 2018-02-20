@@ -32,8 +32,6 @@
     var Player = function(id){
         var self = {};
         self.gameobject = game.add.sprite(250, 250, 'dude');
-        self.gameobject.anchor.x = 0.5;
-        self.gameobject.anchor.y = 0.5;
         self.ID = id;
         self.toDelete = false;
         self.thisPlayer  = false;
@@ -156,7 +154,7 @@
         self.targetX = position[0];
         self.targetY = position[1];
         Enemy.list[id] = self;
-        
+
         return self;
     }
     
