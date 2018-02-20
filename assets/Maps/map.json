@@ -1,0 +1,44 @@
+{ "height":17,
+ "layers":[
+        {
+         "compression":"zlib",
+         "data":"eJy1kzsOACAIQ9HN+1\/YycSBn60dumBeiwSGmY1L85JX895ZZd6KzOg\/r\/6vXJbb8WB6VuR2+IqN+A7H8myu56PuOeKZXHSf2Vkr7xjJ\/nkTjI963gqu4hVzYll0105tAbziDhBtrLUC5A==",
+         "encoding":"base64",
+         "height":17,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":30,
+         "x":0,
+         "y":0
+        }],
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "properties":
+    {
+
+    },
+ "renderorder":"right-down",
+ "tileheight":64,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "image":"wood_tileset.png",
+         "imageheight":512,
+         "imagewidth":512,
+         "margin":0,
+         "name":"wood_tileset",
+         "properties":
+            {
+
+            },
+         "spacing":0,
+         "tilecount":64,
+         "tileheight":64,
+         "tilewidth":64
+        }],
+ "tilewidth":64,
+ "version":1,
+ "width":30
+}

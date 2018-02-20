@@ -5,7 +5,7 @@ var config = require('cloud-env');
 var p2 = require('p2');
 var io = require('socket.io')(serv,{});
 var GAMEBOUNDX = 1920;
-var GAMRBOUNDY = 1080;
+
 
 app.get('/', function (req, res){
    res.sendFile(__dirname + '/client/index.html');

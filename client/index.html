@@ -253,11 +253,15 @@
     //Loads assets
     function preload() {
         game.load.image('bullet', '/assets/bullet.png');
-        game.load.image('tile', '/assets/tile.png');
         game.load.image('dude', '/assets/player.png');
         game.load.image('block', '/assets/block.png');
         game.load.image('grass', '/assets/grass.png');
         game.load.image('tree', '/assets/tree.png');
+
+        // LOADING TILESET ASSETS
+        this.load.tilemap('map', '/assets/Maps/map.csv');
+        this.load.image('tiles', '/assets/Maps/wood_tileset.png');
+
         game.load.image('zombie', '/assets/zombie.png')
     }
     
@@ -265,13 +269,21 @@
     var healthpoints;
     var startGame =false;
 
+    // Tileset Variables
+    var map;
+    var layer;
+
     //Initializes game
     function create() {
+        map = game.add.tilemap('map', 64, 64);
+        map.addTilesetImage('tiles');
+        layer = map.createLayer(0);
+        layer.resizeWorld();
+
         game.world.setBounds(0, 0, 1920, 1080);
         game.time.advancedTiming = true;
         game.stage.disableVisibilityChange = true;
         game.stage.backgroundColor = '#95BCC7';
-        game.add.tileSprite(0,0,game.width, game.height, 'tile');
         
         game.physics.startSystem(Phaser.Physics.P2JS);
 
