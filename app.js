@@ -48,6 +48,8 @@ var Player = function (id) {
     	position:[250,250],
     });
 
+    self.heatlhpoints = 100;
+
     self.body.addShape(new p2.Box({width:94, height:62}));
     world.addBody(self.body);
 
@@ -126,6 +128,7 @@ Player.generateCurrentStatusPackage = function(){
 		pack[i] = {
 			position : Player.list[i].body.position,
 			angle : Player.list[i].angle,
+			health : Player.list[i].healthpoints,
 		};
 	}
 	return pack;
