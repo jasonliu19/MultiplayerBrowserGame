@@ -32,6 +32,8 @@
     var Player = function(id){
         var self = {};
         self.gameobject = game.add.sprite(250, 250, 'dude');
+        self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
         self.ID = id;
         self.toDelete = false;
         self.thisPlayer  = false;
@@ -147,6 +149,8 @@
     
     var Block = function(texture, position){
         self.gameobject = game.add.sprite(position[0], position[1], texture);
+        self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
     }
     
     Block.makeMap = function(mapArray){
@@ -161,6 +165,8 @@
         self.id = Math.random();
         self.maxspeed = 1200;
         self.gameobject = game.add.sprite(position[0],position[1], 'bullet');
+        self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
         game.physics.p2.enable(self.gameobject);
         self.gameobject.body.angle = angle;
         self.gameobject.body.velocity.x = Math.cos(angle/180*Math.PI) * self.maxspeed;

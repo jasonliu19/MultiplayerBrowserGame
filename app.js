@@ -50,7 +50,7 @@ var Player = function (id) {
 
     self.heatlhpoints = 100;
 
-    self.body.addShape(new p2.Box({width:94, height:62}));
+    self.body.addShape(new p2.Box({width:64, height:64}));
     world.addBody(self.body);
 
     self.updateVel = function () {
