@@ -35,6 +35,8 @@ var Player = function (id) {
 
     self.maxspeed = 150;
 
+    self.angle = 0;
+
     self.body = new p2.Body({
     	mass:1,
     	position:[250,250],
@@ -77,10 +79,11 @@ Player.onConnect = function (socket) {
     var player = Player(socket.id);
 
     socket.on('updateServerOnMainPlayer', function (data) {
-        player.pressingLeft = data.left;
-        player.pressingRight = data.right;
-        player.pressingDown = data.down;
-        player.pressingUp = data.up;
+        player.pressingLeft = data.inputs.left;
+        player.pressingRight = data.inputs.right;
+        player.pressingDown = data.inputs.down;
+        player.pressingUp = data.inputs.up;
+        player.angle = data.angle;
     });
 
     //Notify other players
@@ -95,7 +98,10 @@ Player.onDisconnect = function (socket) {
 Player.getStatusPackage = function(){
 	var pack = {};
 	for(var i in Player.list){
-		pack[i] = Player.list[i].body.position;
+		pack[i] = {
+			position : Player.list[i].body.position,
+			angle : Player.list[i].angle,
+		};
 	}
 	return pack;
 }

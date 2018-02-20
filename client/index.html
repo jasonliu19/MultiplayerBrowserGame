@@ -31,6 +31,7 @@
         }
         self.targetX = 250;
         self.targetY = 250;
+        self.targetAngle = 0;
         self.gameobject.scale.setTo(0.3);
         self.gameobject.anchor.x = 100.0/313;
         self.gameobject.anchor.y = 120.0/207;
@@ -42,7 +43,6 @@
     }
     Player.list = {};
 
-    var timer
     Player.create = function (id) {
         var player = Player(id);
 
@@ -53,6 +53,7 @@
 
     Player.initThisPlayer = function(id){
         Player.thisPlayer = Player.create(id);
+        Player.thisPlayer.thisPlayer = true;
         // game.physics.p2.enable(Player.thisPlayer.gameobject);
         // Player.thisPlayer.gameobject.body.fixedRotation = true;
     }
@@ -76,32 +77,37 @@
         delete Player.list[id];
     }
 
-    Player.updateLocalMovement = function(){
-        Player.thisPlayer.gameobject.y = 0;
-        Player.thisPlayer.gameobject.x = 0;
-        if (Inputs.left)
-        {
-            Player.thisPlayer.gameobject.x = -150;
-        }
-        else if (Inputs.right)
-        {
-            Player.thisPlayer.gameobject.x = 150;
-        }
+    // Player.updateLocalMovement = function(){
+    //     Player.thisPlayer.gameobject.y = 0;
+    //     Player.thisPlayer.gameobject.x = 0;
+    //     if (Inputs.left)
+    //     {
+    //         Player.thisPlayer.gameobject.x = -150;
+    //     }
+    //     else if (Inputs.right)
+    //     {
+    //         Player.thisPlayer.gameobject.x = 150;
+    //     }
 
-        if (Inputs.up)
-        {
-            Player.thisPlayer.gameobject.y = -150;
-        }
-        else if (Inputs.down)
-        {
-            Player.thisPlayer.gameobject.y = 150;
-        }
+    //     if (Inputs.up)
+    //     {
+    //         Player.thisPlayer.gameobject.y = -150;
+    //     }
+    //     else if (Inputs.down)
+    //     {
+    //         Player.thisPlayer.gameobject.y = 150;
+    //     }
+    // }
+
+    Player.updateAllTargetStatuses = function(data){
+        Player.updateAllTargetPos(data);
+        Player.updateOtherTargetAngles(data);
     }
 
     Player.updateAllTargetPos = function(data){
         for(var id in data){
-            Player.list[id].targetX = data[id][0];
-            Player.list[id].targetY = data[id][1];
+            Player.list[id].targetX = data[id].position[0];
+            Player.list[id].targetY = data[id].position[1];
         }
     }
 
@@ -110,6 +116,38 @@
             Player.list[id].gameobject.x = Player.list[id].targetX;
             Player.list[id].gameobject.y = Player.list[id].targetY;
         }
+    }
+
+    Player.updateOtherTargetAngles = function(data){
+        for(var id in data){
+            if(!Player.list[id].thisPlayer){
+                Player.list[id].gameobject.targetAngle = data[id].angle;
+            }
+        }
+    }
+    Player.updateSelfRotation = function(){
+            //Mouse rotation
+            var x = game.camera.x + game.input.mousePointer.x;
+            var y = game.camera.y+ game.input.mousePointer.y;
+            var thisplayer = Player.thisPlayer;
+            var absAngle = Math.abs(Math.atan((y-thisplayer.gameobject.y)/(x-thisplayer.gameobject.x))*180/Math.PI);
+            if(x > thisplayer.gameobject.x && y > thisplayer.gameobject.y)
+                thisplayer.gameobject.angle = absAngle;
+            else if (x < thisplayer.gameobject.x && y > thisplayer.gameobject.y)
+                thisplayer.gameobject.angle = -180 - absAngle;
+            else if (x < thisplayer.gameobject.x && y < thisplayer.gameobject.y)
+                thisplayer.gameobject.angle = -180 + absAngle;
+            else
+                thisplayer.gameobject.angle = -absAngle;
+    }
+
+    Player.updateAllRotations = function(){
+        for(var id in Player.list){
+            if(!Player.list[id].thisPlayer){
+                Player.list[id].gameobject.angle = Player.list[id].gameobject.targetAngle;
+            }
+        }
+        Player.updateSelfRotation();
     }
     // Player.updateTargetPos = function(newPos){
     //     Player.thisPlayer.targetX = newPos[0];
@@ -146,7 +184,7 @@
     // }
 
     Player.updateServer = function(){
-        socket.emit('updateServerOnMainPlayer', Inputs);
+        socket.emit('updateServerOnMainPlayer', {inputs: Inputs, angle: Player.thisPlayer.gameobject.angle});
         console.log("X: " + Player.thisPlayer.gameobject.x);
     }
     
@@ -178,15 +216,15 @@
         socket.on('connect', function() {
             Player.initThisPlayer(socket.id)
             console.log("Socket: " + socket.id);
-            socket.on('updateClientOnPlayers', Player.updateAllTargetPos);
+            socket.on('updateClientOnPlayers', Player.updateAllTargetStatuses);
             socket.on('newPlayer', Player.initNewPlayer);
             socket.on('initialSpawn', Player.initialSpawn);
             socket.on('playerDisconnect', Player.onDisconnect);
             startGame = true;
+            game.time.events.loop(100, Player.updateServer, this);
+
         });;
 
-
-        game.time.events.loop(1000, Player.updateServer, this);
 
         document.onkeydown = function (ev) {
         if(ev.keyCode === 68){ //d
@@ -229,6 +267,7 @@
             scoreText.text = 'FPS: ' + game.time.fps;
             //Player.updateLocalMovement();
             Player.interpolatePlayers();
+            Player.updateAllRotations();
         }
     }
     
