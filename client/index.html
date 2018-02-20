@@ -151,11 +151,49 @@
         var self = {};
         self.id = id;
         self.gameobject = game.add.sprite(position[0], position[1], 'zombie');
+        self.targetX = position[0];
+        self.targetY = position[1];
         Enemy.list[id] = self;
         return self;
     }
     
     Enemy.list = {};
+    
+    Enemy.createEnemy = function(data) {
+        Enemy(data.id, data.position);
+        console.log("received enemy");
+    }
+    
+    Enemy.updateAllTargetStatuses = function(data){
+        Enemy.updateAllTargetPositions(data);
+    }
+    
+    Enemy.updateAllTargetPositions = function(data){
+        for(var id in data){
+            Enemy.list[id].targetX = data[id].position[0];
+            Enemy.list[id].targetY = data[id].position[1];
+        }
+    }
+    
+    Enemy.updateAllPositons = function(){
+        for(var id in Enemy.list){
+            Enemy.list[id].gameobject.x = Enemy.list[id].targetX;
+            Enemy.list[id].gameobject.y = Enemy.list[id].targetY;
+        }
+    }
+    
+    Enemy.onInitialJoinPopulateEnemies = function(data){
+        for(var id in data){
+            if(!(id in Enemy.list)){
+                Enemy(id, data[id].position);
+            }
+        }
+    }
+    
+    Enemy.delete = function(enemyid){
+        Enemy.list[enemyid].gameobject.kill();
+        delete Enemy.list[enemyid];
+    }
     
     
     var Block = function(texture, position){
@@ -243,15 +281,18 @@
 
         socket = io();
         socket.on('connect', function() {
-            Player.initThisPlayer(socket.id)
+            Player.initThisPlayer(socket.id);
             console.log("Socket: " + socket.id);
             socket.on('updateClientOnPlayers', Player.updateAllTargetStatuses);
             socket.on('newPlayer', Player.initNewPlayer);
             socket.on('onInitialJoinPopulatePlayers', Player.onInitialJoinPopulatePlayers);
+            socket.on('onInitialJoinPopulateZombies', Enemy.onInitialJoinPopulateEnemies);
+            socket.on('deleteEnemy', Enemy.delete);
             socket.on('playerDisconnect', Player.onDisconnect);
             socket.on('bulletCreate', Bullet.initNewBullet);
             socket.on('createMap', Block.makeMap);
-            Enemy(1, [20, 20]);
+            socket.on('createEnemy', Enemy.createEnemy);
+            socket.on('updateClientOnEnemies', Enemy.updateAllTargetStatuses);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
 
@@ -304,6 +345,7 @@
             Player.updateAllPositons();
             Player.updateAllRotations();
             Bullet.destroyOldBullets();
+            Enemy.updateAllPositons();
         }
     }
 

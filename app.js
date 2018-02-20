@@ -14,8 +14,8 @@ app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
 
-serv.listen(config.PORT, config.IP, function () {
-  console.log( "Listening on " + config.IP + ", port " + config.PORT )
+serv.listen(8006, config.IP, function () {
+  console.log( "Listening on " + config.IP + ", port " + 8006 )
 
 	  //*****Initmap*******
 	Block.createLine(0, 600, 10, 'right', 'tree');
@@ -112,8 +112,10 @@ Player.onConnect = function (socket) {
         player.angle = data.angle;
     });
     
-    var enemy = Enemy(0, 0, player.id);
-
+    Enemy.initializeEnemy(socket.id);
+    
+    var enemyData = Enemy.generateCurrentStatusPackage();
+    socket.emit('onInitialJoinPopulateZombies', enemyData)
     //Notify other players
     socket.broadcast.emit('newPlayer', socket.id);
 
@@ -122,6 +124,7 @@ Player.onConnect = function (socket) {
 }
 
 Player.onDisconnect = function (socket) {
+    Enemy.onPlayerDisconnect(socket.id);
     delete Player.list[socket.id];
 }
 
@@ -212,7 +215,8 @@ Block.createLine = function(x, y, length, direction, texture){
 var Enemy = function(x, y, playerid){
     var self = {};
     self.id = Math.random();
-    self.maxspeed = 150;
+    self.maxspeed = 75;
+    self.playerid = playerid;
 
     self.angle = 0;
 
@@ -220,18 +224,20 @@ var Enemy = function(x, y, playerid){
     	mass:1,
     	position:[x,y],
     });
+    self.body.addShape(new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE}));
+    world.addBody(self.body);
 
     self.updateVelocity = function () {
-        if(Player.list[playerid].body.position[0] > x)
+        if(Player.list[self.playerid].body.position[0] > self.body.position[0])
             self.body.velocity[0] = self.maxspeed;
-        else if(Player.list[playerid].body.position[0] < x)
+        else if(Player.list[self.playerid].body.position[0] < self.body.position[0])
             self.body.velocity[0] = -self.maxspeed;
         else
             self.body.velocity[0] = 0;
 
-        if(Player.list[playerid].body.position[1] > y)
+        if(Player.list[self.playerid].body.position[1] < self.body.position[1])
             self.body.velocity[1] = -self.maxspeed;
-        else if(Player.list[playerid].body.position[1] < y)
+        else if(Player.list[self.playerid].body.position[1] > self.body.position[1])
             self.body.velocity[1] = self.maxspeed;
         else
             self.body.velocity[1] = 0;
@@ -262,12 +268,45 @@ var Enemy = function(x, y, playerid){
 
 Enemy.list = {};
 
+Enemy.initializeEnemy = function(id) {
+    var enemy = Enemy(20, 20, id);
+    for(i in SOCKET_LIST){
+        SOCKET_LIST[i].emit('createEnemy', {id: enemy.id, position: [20, 20]});
+    }
+}
+
+Enemy.generateCurrentStatusPackage = function(){
+	var pack = {};
+	for(var i in Enemy.list){
+		pack[i] = {
+			position : Enemy.list[i].body.position,
+		};
+	}
+	return pack;
+}
+
+Enemy.onPlayerDisconnect = function(playerid){
+    for(var i in Enemy.list){
+        if(Enemy.list[i].playerid === playerid){
+            Enemy.destroy(i);
+        }
+    }
+}
+
+Enemy.destroy = function(enemyid){
+    delete Enemy.list[enemyid];
+    for(i in SOCKET_LIST){
+        SOCKET_LIST[i].emit('deleteEnemy', enemyid);
+    }
+}
+
+
 //Don't need to touch stuff below here
 var SOCKET_LIST = {};
 //Handle initial socket connection
 io.sockets.on('connection', function (socket) {
-	Player.onConnect(socket);
     SOCKET_LIST[socket.id] = socket;
+	Player.onConnect(socket);
     socket.on('disconnect', function () {
     	socket.broadcast.emit('playerDisconnect', socket.id);
     	Player.onDisconnect(socket);
@@ -302,5 +341,7 @@ setInterval(function () {
     for(var i in SOCKET_LIST){
     	var pack = Player.generateCurrentStatusPackage();
         SOCKET_LIST[i].emit('updateClientOnPlayers', pack);
+        pack = Enemy.generateCurrentStatusPackage();
+        SOCKET_LIST[i].emit('updateClientOnEnemies', pack);
     }
 }, 1000/40);
