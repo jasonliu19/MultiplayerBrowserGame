@@ -14,8 +14,8 @@ app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
 
-serv.listen(config.PORT, config.IP, function () {
-  console.log( "Listening on " + config.IP + ", port " + config.PORT )
+serv.listen(8006, config.IP, function () {
+  console.log( "Listening on " + config.IP + ", port " + 8006 )
 
 	  //*****Initmap*******
 	Block.createLine(0, 600, 10, 'right', 'tree');
@@ -112,7 +112,7 @@ Player.onConnect = function (socket) {
         player.angle = data.angle;
     });
     
-    Enemy.initializeEnemy(socket.id);
+    Enemy.initializeEnemy(socket.id, 20, 20);
     
     var enemyData = Enemy.generateCurrentStatusPackage();
     socket.emit('onInitialJoinPopulateZombies', enemyData)
@@ -268,10 +268,33 @@ var Enemy = function(x, y, playerid){
 
 Enemy.list = {};
 
-Enemy.initializeEnemy = function(id) {
-    var enemy = Enemy(20, 20, id);
+Enemy.initializeEnemy = function(playerid, x, y) {
+    var enemy = Enemy(x, y, playerid);
     for(i in SOCKET_LIST){
-        SOCKET_LIST[i].emit('createEnemy', {id: enemy.id, position: [20, 20]});
+        SOCKET_LIST[i].emit('createEnemy', {id: enemy.id, position: [x, y]});
+    }
+}
+
+Enemy.randomGenerateEnemy = function() {
+    for(i in Player.list){
+        var spawnSide = Math.floor((Math.random() * 4) + 1);
+        var x = 10;
+        var y = 10;
+        if(spawnSide == 0) {
+            x = 960;
+        }
+        else if(spawnSide == 1) {
+            x = 960;
+            y = 1070;
+        }
+        else if(spawnSide == 2) {
+            y = 540;
+        }
+        else {
+            x = 1910;
+            y = 540;
+        }
+        Enemy.initializeEnemy(i, x, y);
     }
 }
 
@@ -316,6 +339,8 @@ io.sockets.on('connection', function (socket) {
 
 //Physics loop
 var lastTime = Date.now();
+var counter = 0;
+
 setInterval(function () {
 	var delta = Date.now() - lastTime;
 	lastTime = Date.now();
@@ -334,6 +359,12 @@ setInterval(function () {
         //Check if enemy is out of bounds
         enemy.worldbounds();
     }
+    // randomly spawning enemies
+    if(counter == 1000) {
+        counter -= 1000;
+        Enemy.randomGenerateEnemy();
+    }
+    counter++;
 }, 1000/60);
 
 //Update clients loop
