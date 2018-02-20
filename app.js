@@ -14,8 +14,8 @@ app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
  
-serv.listen(8080, config.IP, function () {
-  console.log( "Listening on " + config.IP + ", port " + 8080 )
+serv.listen(config.PORT, config.IP, function () {
+  console.log( "Listening on " + config.IP + ", port " + config.PORT )
 	  //*****Initmap*******
 	Block.createLine(0, 600, 10, 'right', 'tree');
 	Block.createLine(1000, 0, 10, 'down', 'grass');
