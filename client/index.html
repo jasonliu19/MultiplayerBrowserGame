@@ -136,11 +136,48 @@
     }
     
 
+    var Bullet = function(angle, position){
+        var self = {};
+        self.id = Math.random();
+        self.maxspeed = 1200;
+        self.gameobject = game.add.sprite(position[0],position[1], 'bullet');
+        game.physics.p2.enable(self.gameobject);
+        self.gameobject.body.angle = angle;
+        self.gameobject.body.velocity.x = Math.cos(angle/180*Math.PI) * self.maxspeed;
+        self.gameobject.body.velocity.y = Math.sin(angle/180*Math.PI) * self.maxspeed;
+        self.timeAlive = 0;
+        Bullet.list[self.id] = self;
+    }
+
+    Bullet.list = {};
+
+    Bullet.destroyOldBullets = function(){
+        for(var id in Bullet.list){
+            if(Bullet.list[id].timeAlive > 30){
+                Bullet.list[id].gameobject.kill();
+                delete Bullet.list[id];
+            } else{
+                Bullet.list[id].timeAlive++;
+            }
+        }
+    }
+
+    Bullet.initNewBullet = function(data){
+        Bullet(data.angle, data.position);
+    }
+
+    Bullet.requestServerForBullet = function(){
+        var angle = Player.thisPlayer.gameobject.angle;
+        var position = [Player.thisPlayer.gameobject.x, Player.thisPlayer.gameobject.y];
+        console.log("Requesting bullet: " + angle + position[0] + position[1]);
+        socket.emit('requestServerForBullet', {angle:angle, position:position});
+    }
 
     //Main phaser functions
 
     //Loads assets
     function preload() {
+        game.load.image('bullet', '/assets/bullet.png');
         game.load.image('tile', '/assets/tile.png');
         game.load.image('dude', '/assets/player.png');
         game.load.image('block', '/assets/block.png');
@@ -157,7 +194,9 @@
         game.stage.disableVisibilityChange = true;
         game.stage.backgroundColor = '#95BCC7';
         game.add.tileSprite(0,0,game.width, game.height, 'tile');
-        
+
+        game.physics.startSystem(Phaser.Physics.P2JS);
+
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
         
         socket = io();
@@ -168,6 +207,7 @@
             socket.on('newPlayer', Player.initNewPlayer);
             socket.on('onInitialJoinPopulatePlayers', Player.onInitialJoinPopulatePlayers);
             socket.on('playerDisconnect', Player.onDisconnect);
+            socket.on('bulletCreate', Bullet.initNewBullet);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
 
@@ -204,6 +244,10 @@
                 }
                 Player.updateServer();
             }
+
+            document.onclick = function(){
+                Bullet.requestServerForBullet();
+            }
         });
     }
     
@@ -214,6 +258,7 @@
             scoreText.text = 'FPS: ' + game.time.fps;
             Player.updateAllPositons();
             Player.updateAllRotations();
+            Bullet.destroyOldBullets();
         }
     }
 

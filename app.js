@@ -87,6 +87,8 @@ Player.onConnect = function (socket) {
 
     //Notify other players
     socket.broadcast.emit('newPlayer', socket.id);
+
+    socket.on('requestServerForBullet', Bullet.handleCreateRequest);
     
 }
 
@@ -105,8 +107,43 @@ Player.generateCurrentStatusPackage = function(){
 	return pack;
 }
 
-var SOCKET_LIST = {};
 
+var Bullet = function(angle, position){
+	var self = {};
+	self.id = Math.random();
+	self.maxspeed = 1200;
+	self.body = new p2.Body({
+		mass : 1,
+		position : position,
+		angle: angle,
+		velocity: [Math.cos(angle/180*Math.PI) * self.maxspeed, Math.sin(angle/180*Math.PI) * self.maxspeed]
+	});
+	self.body.addShape(new p2.Box({width:8, height:32}));
+	self.timeAlive = 0;
+	Bullet.array[self.id] = self;
+}
+
+Bullet.array = {};
+
+Bullet.destroyOldBullets = function(){
+	for(var id in Bullet.array){
+		if(Bullet.array[id].timeAlive > 30){
+			delete Bullet.array[id];
+		} else{
+			Bullet.array[id].timeAlive++;
+		}
+	}
+}
+
+Bullet.handleCreateRequest = function(data){
+	Bullet(data.angle, data.position);
+	for(var id in SOCKET_LIST){
+		SOCKET_LIST[id].emit('bulletCreate', data);
+	}
+}
+
+//Don't need to touch stuff below here
+var SOCKET_LIST = {};
 //Handle initial socket connection
 io.sockets.on('connection', function (socket) {
 	Player.onConnect(socket);
@@ -128,6 +165,7 @@ setInterval(function () {
         player.update();
     }
 	world.step(delta/1000);
+	Bullet.destroyOldBullets();
 }, 1000/60);
 
 //Update clients loop
