@@ -14,8 +14,8 @@ app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
  
-serv.listen(8082, config.IP, function () {
-  console.log( "Listening on " + config.IP + ", port " + 8082 )
+serv.listen(8080, config.IP, function () {
+  console.log( "Listening on " + config.IP + ", port " + 8080 )
 	  //*****Initmap*******
 	Block.createLine(0, 600, 10, 'right', 'tree');
 	Block.createLine(1000, 0, 10, 'down', 'grass');
@@ -171,8 +171,10 @@ var Block = function(x,y,texture){
     self.texture = texture;
     self.body = new p2.Body({
     	position:[x,y],
+    	type: p2.Body.KINEMATIC
     });
     self.body.addShape(new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE}));
+    world.addBody(self.body);
     Block.list.push(self);
     return self;
 }
@@ -184,7 +186,7 @@ Block.list = [];
 Block.generateMapData = function(){
 	var data = [];
 	for(var i = 0; i < Block.list.length; i++){
-		data[i] = {texture: DEFAULTBLOCKTEXTURE, position: Block.list[i].body.position};
+		data[i] = {texture: Block.list[i].texture, position: Block.list[i].body.position};
 	}
 	return data;
 }
