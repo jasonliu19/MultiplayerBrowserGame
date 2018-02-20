@@ -5,8 +5,6 @@
 <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
-
-
     //Socket instance, initialized in create()
     var socket;
 
@@ -146,6 +144,17 @@
         console.log("X: " + Player.thisPlayer.gameobject.x);
     }
     
+    
+    var Block = function(texture, position){
+        self.gameobject = game.add.sprite(position[0], position[1], texture);
+    }
+    
+    Block.makeMap = function(mapArray){
+        for(var i = 0; i < mapArray.length; i++) {
+            Block(mapArray[i].texture, mapArray[i].position);
+        }
+    }
+    
 
     var Bullet = function(angle, position){
         var self = {};
@@ -193,6 +202,7 @@
         game.load.image('dude', '/assets/player.png');
         game.load.image('block', '/assets/block.png');
         game.load.image('grass', '/assets/grass.png');
+        game.load.image('tree', '/assets/tree.png');
     }
     
     var scoreText;
@@ -206,7 +216,7 @@
         game.stage.disableVisibilityChange = true;
         game.stage.backgroundColor = '#95BCC7';
         game.add.tileSprite(0,0,game.width, game.height, 'tile');
-
+        
         game.physics.startSystem(Phaser.Physics.P2JS);
 
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
@@ -222,6 +232,7 @@
             socket.on('onInitialJoinPopulatePlayers', Player.onInitialJoinPopulatePlayers);
             socket.on('playerDisconnect', Player.onDisconnect);
             socket.on('bulletCreate', Bullet.initNewBullet);
+            socket.on('createMap', Block.makeMap);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
 

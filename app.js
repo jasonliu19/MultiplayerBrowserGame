@@ -14,8 +14,8 @@ app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
  
-serv.listen(config.PORT, config.IP, function () {
-  console.log( "Listening on " + config.IP + ", port " + config.PORT )
+serv.listen(8082, config.IP, function () {
+  console.log( "Listening on " + config.IP + ", port " + 8082 )
 	  //*****Initmap*******
 	Block.createLine(0, 600, 10, 'right', 'tree');
 	Block.createLine(1000, 0, 10, 'down', 'grass');
@@ -27,7 +27,7 @@ var world = new p2.World({
 });
 
 var BLOCKSIZE = 64;
-var DEFAULTBLOCKTEXTURE = 'wall';
+var DEFAULTBLOCKTEXTURE = 'grass';
 
 //Server player class
 var Player = function (id) {
