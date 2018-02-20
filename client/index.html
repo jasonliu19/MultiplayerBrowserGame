@@ -53,15 +53,15 @@
 
     Player.initThisPlayer = function(id){
         Player.thisPlayer = Player.create(id);
-        game.physics.p2.enable(Player.thisPlayer.gameobject);
-        Player.thisPlayer.gameobject.body.fixedRotation = true;
+        // game.physics.p2.enable(Player.thisPlayer.gameobject);
+        // Player.thisPlayer.gameobject.body.fixedRotation = true;
     }
 
     Player.initNewPlayer = function(id){
         console.log("init new player");
         var player = Player.create(id);
-        game.physics.p2.enable(player.gameobject);
-        player.gameobject.body.fixedRotation = true;
+        // game.physics.p2.enable(player.gameobject);
+        // player.gameobject.body.fixedRotation = true;
     }
 
     Player.initialSpawn = function(data){
@@ -77,24 +77,24 @@
     }
 
     Player.updateLocalMovement = function(){
-        Player.thisPlayer.gameobject.body.velocity.y = 0;
-        Player.thisPlayer.gameobject.body.velocity.x = 0;
+        Player.thisPlayer.gameobject.y = 0;
+        Player.thisPlayer.gameobject.x = 0;
         if (Inputs.left)
         {
-            Player.thisPlayer.gameobject.body.velocity.x = -150;
+            Player.thisPlayer.gameobject.x = -150;
         }
         else if (Inputs.right)
         {
-            Player.thisPlayer.gameobject.body.velocity.x = 150;
+            Player.thisPlayer.gameobject.x = 150;
         }
 
         if (Inputs.up)
         {
-            Player.thisPlayer.gameobject.body.velocity.y = -150;
+            Player.thisPlayer.gameobject.y = -150;
         }
         else if (Inputs.down)
         {
-            Player.thisPlayer.gameobject.body.velocity.y = 150;
+            Player.thisPlayer.gameobject.y = 150;
         }
     }
 
@@ -107,8 +107,8 @@
 
     Player.interpolatePlayers = function(){
         for(var id in Player.list){
-            Player.list[id].gameobject.body.x = Player.list[id].targetX;
-            Player.list[id].gameobject.body.y = Player.list[id].targetY;
+            Player.list[id].gameobject.x = Player.list[id].targetX;
+            Player.list[id].gameobject.y = Player.list[id].targetY;
         }
     }
     // Player.updateTargetPos = function(newPos){
@@ -121,7 +121,7 @@
     //     var oldY = Player.thisPlayer.gameobject.body.y;
     //     var targX = Player.thisPlayer.targetX;
     //     var targY = Player.thisPlayer.targetY;
-    //     var stationaryX = Player.thisPlayer.gameobject.body.velocity.x === 0;
+    //     var stationaryX = Player.thisPlayer.gameobject.x === 0;
     //     var stationaryY = Player.thisPlayer.gameobject.body.velocity.y === 0;
     //     Player.thisPlayer.gameobject.body.x = targX;
     //     Player.thisPlayer.gameobject.body.y = targY;
@@ -147,7 +147,7 @@
 
     Player.updateServer = function(){
         socket.emit('updateServerOnMainPlayer', Inputs);
-        console.log("X: " + Player.thisPlayer.gameobject.body.x);
+        console.log("X: " + Player.thisPlayer.gameobject.x);
     }
     
 
@@ -170,7 +170,7 @@
         game.stage.backgroundColor = '#95BCC7';
         game.add.tileSprite(0,0,game.width, game.height, 'tile');
 
-        game.physics.startSystem(Phaser.Physics.P2JS);
+//        game.physics.startSystem(Phaser.Physics.P2JS);
 
 
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
