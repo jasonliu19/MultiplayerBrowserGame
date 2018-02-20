@@ -14,12 +14,18 @@ app.use('/assets', express.static(__dirname + '/assets'));
  
 serv.listen(config.PORT, config.IP, function () {
   console.log( "Listening on " + config.IP + ", port " + config.PORT )
+	  //*****Initmap*******
+	Block.createLine(0, 600, 10, 'right', 'tree');
+	Block.createLine(1000, 0, 10, 'down', 'grass');
 });
+
 
 var world = new p2.World({
     gravity:[0, 0]
 });
 
+var BLOCKSIZE = 64;
+var DEFAULTBLOCKTEXTURE = 'wall';
 
 //Server player class
 var Player = function (id) {
@@ -74,7 +80,8 @@ Player.onConnect = function (socket) {
 
     var otherPlayersData = Player.generateCurrentStatusPackage();
     socket.emit('onInitialJoinPopulatePlayers', otherPlayersData);
-
+    var mapData = Block.generateMapData();
+    socket.emit('createMap', mapData);
 
     var player = Player(socket.id);
     socket.on('updateServerOnMainPlayer', function (data) {
@@ -142,6 +149,62 @@ Bullet.handleCreateRequest = function(data){
 	}
 }
 
+var Block = function(x,y,texture){
+    var self = {};
+    self.texture = texture;
+    self.body = new p2.Body({
+    	position:[x,y],
+    });
+    self.body.addShape(new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE}));
+    Block.list.push(self);
+    return self;
+}
+
+
+//Change to object if implementing destructable terrain
+Block.list = [];
+
+Block.generateMapData = function(){
+	var data = [];
+	for(var i = 0; i < Block.list.length; i++){
+		data[i] = {texture: DEFAULTBLOCKTEXTURE, position: Block.list[i].body.position};
+	}
+	return data;
+}
+
+//No left or up support yet
+Block.createLine = function(x, y, length, direction, texture){
+	for(var i = 0; i < length; i++){
+		if(direction === 'right'){
+			Block(x+i*BLOCKSIZE, y, texture);
+		} else if(direction === 'down'){
+			Block(x, y+i*BLOCKSIZE, texture);
+		}
+	}
+}
+
+
+var Enemy = function(x,y){
+    var self = {};
+    self.id = Math.random();
+    self.maxspeed = 150;
+
+    self.angle = 0;
+
+    self.body = new p2.Body({
+    	mass:1,
+    	position:[x,y],
+    });
+
+    self.updateVelocity(){
+    	
+    }
+    
+    self.update = function () {
+        self.updateVelocity();
+    }
+}
+
 //Don't need to touch stuff below here
 var SOCKET_LIST = {};
 //Handle initial socket connection
@@ -163,6 +226,7 @@ setInterval(function () {
 	for(var i in Player.list){
         var player = Player.list[i];
         player.update();
+        //Check if player is outofbounds
     }
 	world.step(delta/1000);
 	Bullet.destroyOldBullets();
