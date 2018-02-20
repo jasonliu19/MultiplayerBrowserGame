@@ -151,9 +151,12 @@
         var self = {};
         self.id = id;
         self.gameobject = game.add.sprite(position[0], position[1], 'zombie');
+        self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
         self.targetX = position[0];
         self.targetY = position[1];
         Enemy.list[id] = self;
+        
         return self;
     }
     
