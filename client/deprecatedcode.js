@@ -67,3 +67,43 @@
     //         Player.thisPlayer.gameobject.y = 150;
     //     }
     // }
+
+//client side
+
+    // var Bullet = function(angle, position, id){
+    //     var self = {};
+    //     self.id = id;
+    //     self.maxspeed = 1200;
+    //     self.gameobject = game.add.sprite(position[0],position[1], 'bullet');
+    //     self.gameobject.anchor.x = 0.5;
+    //     self.gameobject.anchor.y = 0.5;
+    //     game.physics.p2.enable(self.gameobject);
+    //     self.gameobject.body.angle = angle;
+    //     self.gameobject.body.velocity.x = Math.cos(angle/180*Math.PI) * self.maxspeed;
+    //     self.gameobject.body.velocity.y = Math.sin(angle/180*Math.PI) * self.maxspeed;
+    //     self.gameobject.body.collideWorldBounds = false;
+    //     self.timeAlive = 0;
+    //     Bullet.list[self.id] = self;
+    // }
+
+    // Bullet.list = {};
+
+    // Bullet.destroyOldBullets = function(){
+    //     for(var id in Bullet.list){
+    //         if(Bullet.list[id].timeAlive > 30){
+    //             Bullet.destroy(id);
+    //         } else{
+    //             Bullet.list[id].timeAlive++;
+    //         }
+    //     }
+    // }
+
+    // Bullet.initNewBullet = function(data){
+    //     Bullet(data.angle, data.position, data.id);
+    //     console.log("New Bullet: " + data.id);
+    // }
+    // Bullet.destroy = function (id) {
+    //     game.physics.p2.removeBody(Bullet.list[id].gameobject.body);
+    //     Bullet.list[id].gameobject.kill();
+    //     delete Bullet.list[id];
+    // }
