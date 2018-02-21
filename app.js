@@ -262,7 +262,7 @@ var Enemy = function(x, y, playerid){
 
     var enemyshape = new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE});
     enemyshape.collisionGroup = ENEMY;
-    enemyshape.collisionMask = ENEMY | PLAYER | BLOCK | BULLET;
+    enemyshape.collisionMask = PLAYER | BLOCK | BULLET;
     self.body.addShape(enemyshape);
     world.addBody(self.body);
 
@@ -398,13 +398,6 @@ setInterval(function () {
         //Check if player is outofbounds
         player.worldbounds();
     }
-    //function to path zombies
-    for(var i in Enemy.list){
-        var enemy = Enemy.list[i];
-        enemy.update();
-        //Check if enemy is out of bounds
-        enemy.worldbounds();
-    }
     world.step(delta/1000);
 	Bullet.destroyOldBullets();
 
@@ -425,17 +418,28 @@ setInterval(function () {
     }
 }, 1000/40);
 
+
+setInterval(function () {
+    //function to path zombies
+    for(var i in Enemy.list){
+        var enemy = Enemy.list[i];
+        enemy.update();
+        //Check if enemy is out of bounds
+        enemy.worldbounds();
+    }
+
+}, 1000/10);
+
 var count2= 0;
 world.on("impact",function(evt){
     var bodyA = evt.bodyA,
         bodyB = evt.bodyB;
-
     //If bullet is involved n collision
     if(bodyA.shapes[0].collisionGroup === BULLET || bodyB.shapes[0].collisionGroup === BULLET){
 	   	var bulletBody, otherBody;
 	   	if (bodyA.shapes[0].collisionGroup === BULLET) {
-	    	bulletBody = bodyA;
-	   		otherbody = bodyB;
+	   		bulletBody = bodyA;
+            otherbody = bodyB;
 	   	} else {
 	    	bulletBody = bodyB;
 	   		otherbody = bodyA;
@@ -446,7 +450,7 @@ world.on("impact",function(evt){
 	   		console.log("Hitting zombie" + count2);
 	   		count2++;
 	   		if(typeof Bullet.list[bulletBody.id] !== 'undefined' && !Bullet.list[bulletBody.id].hasCollided){
-	   			Bullet.list[bulletBody.id].hasCollided = true;
+	   			
 		   		if(Enemy.list[otherbody.id]){
 		   			Enemy.list[otherbody.id].decreaseHealth();
 		   		}
@@ -454,6 +458,7 @@ world.on("impact",function(evt){
 	    }
         console.log("Bullet collision detected " + count2);
         count2++;
-       	Bullet.destroy(bulletBody.id);
+        if(typeof Bullet.list[bulletBody.id] !== 'undefined')
+       	    Bullet.destroy(bulletBody.id);
     }
 });
