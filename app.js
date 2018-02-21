@@ -186,11 +186,13 @@ Bullet.destroyOldBullets = function(){
 	}
 }
 
-Bullet.handleCreateRequest = function(data){
-	var bullet = Bullet(data.angle, data.position);
-	data.id = bullet.id;
+Bullet.handleCreateRequest = function(socketid){
+    var player = Player.list[socketid];
+	var bullet = Bullet(player.angle, player.body.position);
 	for(var i in SOCKET_LIST){
-		SOCKET_LIST[i].emit('bulletCreate', data);
+		SOCKET_LIST[i].emit('bulletCreate', {id: bullet.id, 
+                                            position: player.body.position,
+                                            angle: player.angle});
 	}
 }
 

@@ -262,7 +262,7 @@
         var angle = Player.thisPlayer.gameobject.angle;
         var position = [Player.thisPlayer.gameobject.x, Player.thisPlayer.gameobject.y];
         console.log("Requesting bullet: " + angle + position[0] + position[1]);
-        socket.emit('requestServerForBullet', {angle:angle, position:position});
+        socket.emit('requestServerForBullet', socket.id);
     }
 
     //Main phaser functions
