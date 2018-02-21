@@ -128,7 +128,7 @@ Player.onConnect = function (socket) {
     //Notify other players
     socket.broadcast.emit('newPlayer', socket.id);
 
-    socket.on('requestServerForBullet', Bullet.handleCreateRequest);
+    socket.on('rifleShootRequest', GunHandler.rifleShootRequest);
     
 }
 
@@ -151,51 +151,65 @@ Player.generateCurrentStatusPackage = function(){
 }
 
 
-var Bullet = function(angle, position){
-	var self = {};
-	self.id = Math.random();
-	self.maxspeed = 1200;
-	self.used = false;
-	self.hasCollided = false;
-	self.body = new p2.Body({
-		mass : 1,
-		position : position,
-		angle: angle,
-		velocity: [Math.cos(angle/180*Math.PI) * self.maxspeed, Math.sin(angle/180*Math.PI) * self.maxspeed],
-		id: self.id,
-	});
-	var bulletshape = new p2.Box({width:2, height:16});
-	bulletshape.collisionGroup = BULLET;
-	bulletshape.collisionMask = BULLET | ENEMY | BLOCK;
-	self.body.addShape(bulletshape);
-	world.addBody(self.body);
-	self.timeAlive = 0;
-	Bullet.list[self.id] = self;
-	return self;
-}
+// var Bullet = function(angle, position){
+// 	var self = {};
+// 	self.id = Math.random();
+// 	self.maxspeed = 1200;
+// 	self.used = false;
+// 	self.hasCollided = false;
+// 	self.body = new p2.Body({
+// 		mass : 1,
+// 		position : position,
+// 		angle: angle,
+// 		velocity: [Math.cos(angle/180*Math.PI) * self.maxspeed, Math.sin(angle/180*Math.PI) * self.maxspeed],
+// 		id: self.id,
+// 	});
+// 	var bulletshape = new p2.Box({width:2, height:16});
+// 	bulletshape.collisionGroup = BULLET;
+// 	bulletshape.collisionMask = BULLET | ENEMY | BLOCK;
+// 	self.body.addShape(bulletshape);
+// 	world.addBody(self.body);
+// 	self.timeAlive = 0;
+// 	Bullet.list[self.id] = self;
+// 	return self;
+// }
 
-Bullet.list = {};
+// Bullet.list = {};
 
-Bullet.destroyOldBullets = function(){
-	for(var id in Bullet.list){
-		if(Bullet.list[id].timeAlive > 60){
-			Bullet.destroy(id);
-		} else{
-			Bullet.list[id].timeAlive++;
-		}
-	}
-}
+// Bullet.destroyOldBullets = function(){
+// 	for(var id in Bullet.list){
+// 		if(Bullet.list[id].timeAlive > 60){
+// 			Bullet.destroy(id);
+// 		} else{
+// 			Bullet.list[id].timeAlive++;
+// 		}
+// 	}
+// }
 
-Bullet.handleCreateRequest = function(socketid){
+
+// Bullet.destroy = function(id){
+// 	if(typeof Bullet.list[id] === 'undefined')
+// 		return;
+// 	world.removeBody(Bullet.list[id].body);
+// 	delete Bullet.list[id];
+//     for(i in SOCKET_LIST){
+//         SOCKET_LIST[i].emit('deleteBullet', id);
+//     }
+// }
+
+var GunHandler = {};
+GunHandler.rifleShootRequest = function(socketid){
     var player = Player.list[socketid];
     //var bullet = Bullet(player.angle, player.body.position);
     var angle = player.angle;
     var position = player.body.position;
     var distance = 500;
+    var startx = position[0] + 50*Math.cos(angle/180*Math.PI);
+    var starty = position[1] + 50*Math.sin(angle/180*Math.PI);
 
     var ray = new p2.Ray({
         mode: p2.Ray.CLOSEST, // or ANY
-        from: [position[0] + 80*Math.cos(angle/180*Math.PI), position[1] + 80*Math.sin(angle/180*Math.PI)],
+        from: [startx, starty],
         to: [position[0]+distance*Math.cos(angle/180*Math.PI), position[1]+distance*Math.sin(angle/180*Math.PI)],
     });
     var result = new p2.RaycastResult();
@@ -212,22 +226,18 @@ Bullet.handleCreateRequest = function(socketid){
         }
     }
 
-	// for(var i in SOCKET_LIST){
-	// 	SOCKET_LIST[i].emit('bulletCreate', {id: bullet.id, 
+    var length = Math.abs(result.getHitDistance(ray));
+
+    for(var i in SOCKET_LIST){
+        SOCKET_LIST[i].emit('createGunShot', {startx: startx, starty: starty, angle: angle, length: length});
+    }
+    // for(var i in SOCKET_LIST){
+    //  SOCKET_LIST[i].emit('bulletCreate', {id: bullet.id, 
  //                                            position: player.body.position,
  //                                            angle: player.angle});
-	// }
+    // }
 }
 
-Bullet.destroy = function(id){
-	if(typeof Bullet.list[id] === 'undefined')
-		return;
-	world.removeBody(Bullet.list[id].body);
-	delete Bullet.list[id];
-    for(i in SOCKET_LIST){
-        SOCKET_LIST[i].emit('deleteBullet', id);
-    }
-}
 
 var Block = function(x,y,texture){
     var self = {};
@@ -424,7 +434,7 @@ setInterval(function () {
         player.worldbounds();
     }
     world.step(delta/1000);
-	Bullet.destroyOldBullets();
+	// Bullet.destroyOldBullets();
 
     if(zombieSpawnTimer >= 100){
         zombieSpawnTimer = 0;
@@ -436,6 +446,8 @@ setInterval(function () {
 //Update clients loop
 setInterval(function () {
     for(var i in SOCKET_LIST){
+        if(typeof SOCKET_LIST[i] === 'undefined')
+            continue;
     	var pack = Player.generateCurrentStatusPackage();
         SOCKET_LIST[i].emit('updateClientOnPlayers', pack);
         pack = Enemy.generateCurrentStatusPackage();
@@ -455,35 +467,35 @@ setInterval(function () {
 
 }, 1000/10);
 
-var count2= 0;
-world.on("impact",function(evt){
-    var bodyA = evt.bodyA,
-        bodyB = evt.bodyB;
-    //If bullet is involved n collision
-    if(bodyA.shapes[0].collisionGroup === BULLET || bodyB.shapes[0].collisionGroup === BULLET){
-	   	var bulletBody, otherBody;
-	   	if (bodyA.shapes[0].collisionGroup === BULLET) {
-	   		bulletBody = bodyA;
-            otherbody = bodyB;
-	   	} else {
-	    	bulletBody = bodyB;
-	   		otherbody = bodyA;
-	   	}
+// var count2= 0;
+// world.on("impact",function(evt){
+//     var bodyA = evt.bodyA,
+//         bodyB = evt.bodyB;
+//     //If bullet is involved n collision
+//     if(bodyA.shapes[0].collisionGroup === BULLET || bodyB.shapes[0].collisionGroup === BULLET){
+// 	   	var bulletBody, otherBody;
+// 	   	if (bodyA.shapes[0].collisionGroup === BULLET) {
+// 	   		bulletBody = bodyA;
+//             otherbody = bodyB;
+// 	   	} else {
+// 	    	bulletBody = bodyB;
+// 	   		otherbody = bodyA;
+// 	   	}
 
-	   	//If bullet hit an enemy
-	    if(bodyA.shapes[0].collisionGroup === ENEMY || bodyB.shapes[0].collisionGroup === ENEMY){
-	   		console.log("Hitting zombie" + count2);
-	   		count2++;
-	   		if(typeof Bullet.list[bulletBody.id] !== 'undefined' && !Bullet.list[bulletBody.id].hasCollided){
+// 	   	//If bullet hit an enemy
+// 	    if(bodyA.shapes[0].collisionGroup === ENEMY || bodyB.shapes[0].collisionGroup === ENEMY){
+// 	   		console.log("Hitting zombie" + count2);
+// 	   		count2++;
+// 	   		if(typeof Bullet.list[bulletBody.id] !== 'undefined' && !Bullet.list[bulletBody.id].hasCollided){
 	   			
-		   		if(Enemy.list[otherbody.id]){
-		   			Enemy.list[otherbody.id].decreaseHealth();
-		   		}
-		   	}
-	    }
-        console.log("Bullet collision detected " + count2);
-        count2++;
-        if(typeof Bullet.list[bulletBody.id] !== 'undefined')
-       	    Bullet.destroy(bulletBody.id);
-    }
-});
+// 		   		if(Enemy.list[otherbody.id]){
+// 		   			Enemy.list[otherbody.id].decreaseHealth();
+// 		   		}
+// 		   	}
+// 	    }
+//         console.log("Bullet collision detected " + count2);
+//         count2++;
+//         if(typeof Bullet.list[bulletBody.id] !== 'undefined')
+//        	    Bullet.destroy(bulletBody.id);
+//     }
+// });

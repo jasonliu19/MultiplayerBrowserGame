@@ -9,7 +9,7 @@
 
     //Socket instance, initialized in create()
     var socket;
-
+    var graphics;
     //Initialize phaser game
     var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, 'gameWindow', { preload: preload, create: create, update: update });
 
@@ -19,6 +19,7 @@
         game.scale.setGameSize(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio);
         console.log("resize " + window.innerHeight * window.devicePixelRatio);
     });
+
 
 
     //Keeps track of inputs
@@ -258,11 +259,22 @@
         delete Bullet.list[id];
     }
 
-    Bullet.requestServerForBullet = function(){
+    var GunHandler = {};
+
+    GunHandler.rifleShootRequest = function(){
         var angle = Player.thisPlayer.gameobject.angle;
         var position = [Player.thisPlayer.gameobject.x, Player.thisPlayer.gameobject.y];
-        console.log("Requesting bullet: " + angle + position[0] + position[1]);
-        socket.emit('requestServerForBullet', socket.id);
+        console.log("Requesting rifle shot: " + angle + position[0] + position[1]);
+        socket.emit('rifleShootRequest', socket.id);
+    }
+
+    GunHandler.createGunShot = function(data){
+        var endx = data.startx + data.length*Math.cos(data.angle/180*Math.PI);
+        var endy = data.starty + data.length*Math.sin(data.angle/180*Math.PI);
+        graphics.lineStyle(2, 0xffd900, 1);
+        graphics.moveTo(data.startx, data.starty);
+        graphics.lineTo(endx, endy);
+        console.log("Creating line");
     }
 
     //Main phaser functions
@@ -318,11 +330,12 @@
             socket.on('onInitialJoinPopulateZombies', Enemy.onInitialJoinPopulateEnemies);
             socket.on('deleteEnemy', Enemy.delete);
             socket.on('playerDisconnect', Player.onDisconnect);
-            socket.on('bulletCreate', Bullet.initNewBullet);
-            socket.on('deleteBullet', Bullet.destroy);
+            // socket.on('bulletCreate', Bullet.initNewBullet);
+            // socket.on('deleteBullet', Bullet.destroy);
             socket.on('createMap', Block.makeMap);
             socket.on('createEnemy', Enemy.createEnemy);
             socket.on('updateClientOnEnemies', Enemy.updateAllTargetStatuses);
+            socket.on('createGunShot', GunHandler.createGunShot);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
 
@@ -361,16 +374,25 @@
             }
 
             document.onclick = function(){
-                Bullet.requestServerForBullet();
+                GunHandler.rifleShootRequest();
             }
+
+            graphics=game.add.graphics(0,0);
+              graphics.lineStyle(2, 0xffd900, 1);
+              graphics.endFill();
         });
     }
     
 
     //Main render loop
+    var clearGunshots = 0;
     function update(){
         if(startGame){
-            console.log(Player.thisPlayer.gameobject.x);
+            if(clearGunshots>6){
+                clearGunshots = 0;
+                graphics.clear();
+            }
+            clearGunshots++;
             scoreText.text = 'FPS: ' + game.time.fps;
             healthpoints.text = 'Healthpoints: ' + Player.thisPlayer.healthpoints;
             Player.updateAllPositons();
