@@ -145,7 +145,6 @@
 
     Player.updateServer = function(){
         socket.emit('updateServerOnMainPlayer', {inputs: Inputs, angle: Player.thisPlayer.gameobject.angle});
-        console.log("X: " + Player.thisPlayer.gameobject.x);
     }
     
     
@@ -153,6 +152,8 @@
         var self = {};
         self.id = id;
         self.gameobject = game.add.sprite(position[0], position[1], 'zombie');
+        self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
         self.targetX = position[0];
         self.targetY = position[1];
         Enemy.list[id] = self;
@@ -230,6 +231,7 @@
         self.gameobject.body.angle = angle;
         self.gameobject.body.velocity.x = Math.cos(angle/180*Math.PI) * self.maxspeed;
         self.gameobject.body.velocity.y = Math.sin(angle/180*Math.PI) * self.maxspeed;
+        self.gameobject.body.collideWorldBounds = false;
         self.timeAlive = 0;
         Bullet.list[self.id] = self;
     }
@@ -239,8 +241,7 @@
     Bullet.destroyOldBullets = function(){
         for(var id in Bullet.list){
             if(Bullet.list[id].timeAlive > 30){
-                Bullet.list[id].gameobject.kill();
-                delete Bullet.list[id];
+                Bullet.destroy(id);
             } else{
                 Bullet.list[id].timeAlive++;
             }
@@ -249,8 +250,10 @@
 
     Bullet.initNewBullet = function(data){
         Bullet(data.angle, data.position, data.id);
+        console.log("New Bullet: " + data.id);
     }
     Bullet.destroy = function (id) {
+        game.physics.p2.removeBody(Bullet.list[id].gameobject.body);
         Bullet.list[id].gameobject.kill();
         delete Bullet.list[id];
     }
@@ -266,7 +269,7 @@
 
     //Loads assets
     function preload() {
-        game.load.image('bullet', '/assets/bullet.png');
+        game.load.image('bullet', '/assets/bullet2.png');
         game.load.image('dude', '/assets/player.png');
         game.load.image('block', '/assets/block.png');
         game.load.image('grass', '/assets/grass.png');
@@ -371,7 +374,7 @@
             healthpoints.text = 'Healthpoints: ' + Player.thisPlayer.healthpoints;
             Player.updateAllPositons();
             Player.updateAllRotations();
-            Bullet.destroyOldBullets();
+            //Bullet.destroyOldBullets();
             Enemy.updateAllPositons();
         }
     }
