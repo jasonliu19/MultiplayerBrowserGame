@@ -13,17 +13,11 @@ app.get('/', function (req, res){
 app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
-var PLAYER = Math.pow(2,0);
-var ENEMY = Math.pow(2,1);
-var BULLET = Math.pow(2,2);
-var BLOCK = Math.pow(2,3);
-
 serv.listen(config.PORT, config.IP, function () {
   console.log( "Listening on " + config.IP + ", port " + config.PORT )
 
 	  //*****Initmap*******
-	Block.createLine(0, 600, 10, 'right', 'tree');
-	Block.createLine(1000, 0, 10, 'down', 'grass');
+	Block.createMap();
 });
 
 
@@ -31,11 +25,17 @@ var world = new p2.World({
     gravity:[0, 0]
 });
 
+var ENEMYDAMAGE = 34;
 var GUNDAMAGE = 34;
 var BLOCKSIZE = 64;
 var DEFAULTBLOCKTEXTURE = 'grass';
+var PLAYER = Math.pow(2,0);
+var ENEMY = Math.pow(2,1);
+var BULLET = Math.pow(2,2);
+var BLOCK = Math.pow(2,3);
 
 //Server player class
+
 var Player = function (id) {
     var self = {};
     self.id = id;
@@ -54,7 +54,7 @@ var Player = function (id) {
     	position:[250,250],
     });
 
-    self.heatlhpoints = 100;
+    self.healthpoints = 100;
 
     var bodyShape = new p2.Box({width:64, height:64});
     bodyShape.collisionGroup = PLAYER;
@@ -98,10 +98,15 @@ var Player = function (id) {
         self.updateVel();
     }
 
+    self.decreaseHealth = function(){
+        self.healthpoints -= ENEMYDAMAGE;
+    }
+
     Player.list[id] = self;
     return self;
 }
 
+exports.Player = Player;
 Player.list = {};
 
 Player.onConnect = function (socket) {
@@ -144,9 +149,10 @@ Player.generateCurrentStatusPackage = function(){
 		pack[i] = {
 			position : Player.list[i].body.position,
 			angle : Player.list[i].angle,
-			health : Player.list[i].healthpoints,
+			healthpoints : Player.list[i].healthpoints,
 		};
-	}
+	            console.log("Hp: " + Player.list[i].healthpoints);
+    }
 	return pack;
 }
 
@@ -276,6 +282,11 @@ Block.createLine = function(x, y, length, direction, texture){
 			Block(x, y+i*BLOCKSIZE, texture);
 		}
 	}
+}
+
+Block.createMap = function(){
+    Block.createLine(0, 600, 10, 'right', 'tree');
+    Block.createLine(1000, 0, 10, 'down', 'grass');
 }
 
 
@@ -446,12 +457,15 @@ setInterval(function () {
 //Update clients loop
 setInterval(function () {
     for(var i in SOCKET_LIST){
-        if(typeof SOCKET_LIST[i] === 'undefined')
-            continue;
-    	var pack = Player.generateCurrentStatusPackage();
-        SOCKET_LIST[i].emit('updateClientOnPlayers', pack);
-        pack = Enemy.generateCurrentStatusPackage();
-        SOCKET_LIST[i].emit('updateClientOnEnemies', pack);
+        try {
+            var pack = Player.generateCurrentStatusPackage();
+            SOCKET_LIST[i].emit('updateClientOnPlayers', pack);
+            pack = Enemy.generateCurrentStatusPackage();
+            SOCKET_LIST[i].emit('updateClientOnEnemies', pack);
+        }
+        catch(error) {
+          console.log(error);
+        }
     }
 }, 1000/40);
 
@@ -467,35 +481,23 @@ setInterval(function () {
 
 }, 1000/10);
 
-// var count2= 0;
-// world.on("impact",function(evt){
-//     var bodyA = evt.bodyA,
-//         bodyB = evt.bodyB;
-//     //If bullet is involved n collision
-//     if(bodyA.shapes[0].collisionGroup === BULLET || bodyB.shapes[0].collisionGroup === BULLET){
-// 	   	var bulletBody, otherBody;
-// 	   	if (bodyA.shapes[0].collisionGroup === BULLET) {
-// 	   		bulletBody = bodyA;
-//             otherbody = bodyB;
-// 	   	} else {
-// 	    	bulletBody = bodyB;
-// 	   		otherbody = bodyA;
-// 	   	}
+world.on("impact",function(evt){
+    var bodyA = evt.bodyA,
+        bodyB = evt.bodyB;
+    //If player
+    if(bodyA.shapes[0].collisionGroup === PLAYER || bodyB.shapes[0].collisionGroup === PLAYER){
+	   	var playerBody, otherBody;
+	   	if (bodyA.shapes[0].collisionGroup === PLAYER) {
+	   		playerBody = bodyA;
+            otherbody = bodyB;
+	   	} else {
+	    	playerBody = bodyB;
+	   		otherbody = bodyA;
+	   	}
 
-// 	   	//If bullet hit an enemy
-// 	    if(bodyA.shapes[0].collisionGroup === ENEMY || bodyB.shapes[0].collisionGroup === ENEMY){
-// 	   		console.log("Hitting zombie" + count2);
-// 	   		count2++;
-// 	   		if(typeof Bullet.list[bulletBody.id] !== 'undefined' && !Bullet.list[bulletBody.id].hasCollided){
-	   			
-// 		   		if(Enemy.list[otherbody.id]){
-// 		   			Enemy.list[otherbody.id].decreaseHealth();
-// 		   		}
-// 		   	}
-// 	    }
-//         console.log("Bullet collision detected " + count2);
-//         count2++;
-//         if(typeof Bullet.list[bulletBody.id] !== 'undefined')
-//        	    Bullet.destroy(bulletBody.id);
-//     }
-// });
+	   	//If player hit enemy
+    	if (otherbody.shapes[0].collisionGroup === ENEMY){
+
+        }
+    }
+});
