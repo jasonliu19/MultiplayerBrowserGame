@@ -91,8 +91,7 @@
 
     Player.updateAllHealthPoints = function(data){
         for (var id in data){
-            Player.list[id].healthpoints = data[id].healthpoints;
-            console.log("Hp; " + data[id].healthpoints);
+            Player.list[id].healhpoints = data[id].healthpoints; 
         }
     }
 
@@ -221,6 +220,8 @@
         }
     }
     
+
+
 
     var GunHandler = {};
 
