@@ -194,27 +194,23 @@ Bullet.handleCreateRequest = function(socketid){
     var distance = 500;
 
     var ray = new p2.Ray({
-        mode: p2.Ray.ALL, // or ANY
-        from: [position[0], position[1]],
+        mode: p2.Ray.CLOSEST, // or ANY
+        from: [position[0] + 80*Math.cos(angle/180*Math.PI), position[1] + 80*Math.sin(angle/180*Math.PI)],
         to: [position[0]+distance*Math.cos(angle/180*Math.PI), position[1]+distance*Math.sin(angle/180*Math.PI)],
-        callback : function(result){
-            // Get the hit point
-            var hitPoint = p2.vec2.create();
-            result.getHitPoint(hitPoint, ray);
-            console.log('Hit point: ', hitPoint[0], hitPoint[1], ' at distance ' + result.getHitDistance(ray));
-
-            if(result.body !== null && result.body.shapes[0].collisionGroup !== PLAYER){
-                if(result.body.shapes[0].collisionGroup === ENEMY && Enemy.list[result.body.id]){
-                    Enemy.list[result.body.id].decreaseHealth();
-                }
-                result.stop()
-            }
-
-        }
     });
     var result = new p2.RaycastResult();
     world.raycast(result, ray);
 
+    // Get the hit point
+    var hitPoint = p2.vec2.create();
+    result.getHitPoint(hitPoint, ray);
+    console.log('Hit point: ', hitPoint[0], hitPoint[1], ' at distance ' + result.getHitDistance(ray));
+
+    if(result.body !== null && result.body.shapes[0].collisionGroup === ENEMY){
+        if(Enemy.list[result.body.id]){
+            Enemy.list[result.body.id].decreaseHealth();
+        }
+    }
 
 	// for(var i in SOCKET_LIST){
 	// 	SOCKET_LIST[i].emit('bulletCreate', {id: bullet.id, 
@@ -460,34 +456,34 @@ setInterval(function () {
 }, 1000/10);
 
 var count2= 0;
-// world.on("impact",function(evt){
-//     var bodyA = evt.bodyA,
-//         bodyB = evt.bodyB;
-//     //If bullet is involved n collision
-//     if(bodyA.shapes[0].collisionGroup === BULLET || bodyB.shapes[0].collisionGroup === BULLET){
-// 	   	var bulletBody, otherBody;
-// 	   	if (bodyA.shapes[0].collisionGroup === BULLET) {
-// 	   		bulletBody = bodyA;
-//             otherbody = bodyB;
-// 	   	} else {
-// 	    	bulletBody = bodyB;
-// 	   		otherbody = bodyA;
-// 	   	}
+world.on("impact",function(evt){
+    var bodyA = evt.bodyA,
+        bodyB = evt.bodyB;
+    //If bullet is involved n collision
+    if(bodyA.shapes[0].collisionGroup === BULLET || bodyB.shapes[0].collisionGroup === BULLET){
+	   	var bulletBody, otherBody;
+	   	if (bodyA.shapes[0].collisionGroup === BULLET) {
+	   		bulletBody = bodyA;
+            otherbody = bodyB;
+	   	} else {
+	    	bulletBody = bodyB;
+	   		otherbody = bodyA;
+	   	}
 
-// 	   	//If bullet hit an enemy
-// 	    if(bodyA.shapes[0].collisionGroup === ENEMY || bodyB.shapes[0].collisionGroup === ENEMY){
-// 	   		console.log("Hitting zombie" + count2);
-// 	   		count2++;
-// 	   		if(typeof Bullet.list[bulletBody.id] !== 'undefined' && !Bullet.list[bulletBody.id].hasCollided){
+	   	//If bullet hit an enemy
+	    if(bodyA.shapes[0].collisionGroup === ENEMY || bodyB.shapes[0].collisionGroup === ENEMY){
+	   		console.log("Hitting zombie" + count2);
+	   		count2++;
+	   		if(typeof Bullet.list[bulletBody.id] !== 'undefined' && !Bullet.list[bulletBody.id].hasCollided){
 	   			
-// 		   		if(Enemy.list[otherbody.id]){
-// 		   			Enemy.list[otherbody.id].decreaseHealth();
-// 		   		}
-// 		   	}
-// 	    }
-//         console.log("Bullet collision detected " + count2);
-//         count2++;
-//         if(typeof Bullet.list[bulletBody.id] !== 'undefined')
-//        	    Bullet.destroy(bulletBody.id);
-//     }
-// });
+		   		if(Enemy.list[otherbody.id]){
+		   			Enemy.list[otherbody.id].decreaseHealth();
+		   		}
+		   	}
+	    }
+        console.log("Bullet collision detected " + count2);
+        count2++;
+        if(typeof Bullet.list[bulletBody.id] !== 'undefined')
+       	    Bullet.destroy(bulletBody.id);
+    }
+});
