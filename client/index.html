@@ -370,6 +370,7 @@
     //Main render loop
     function update(){
         if(startGame){
+            console.log(Player.thisPlayer.gameobject.x);
             scoreText.text = 'FPS: ' + game.time.fps;
             healthpoints.text = 'Healthpoints: ' + Player.thisPlayer.healthpoints;
             Player.updateAllPositons();
