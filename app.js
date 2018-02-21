@@ -121,7 +121,7 @@ Player.onConnect = function (socket) {
         player.angle = data.angle;
     });
     
-    Enemy.initializeEnemy(socket.id);
+    Enemy.initializeEnemy(socket.id,20,20);
     
     var enemyData = Enemy.generateCurrentStatusPackage();
     socket.emit('onInitialJoinPopulateZombies', enemyData)
@@ -194,7 +194,6 @@ Bullet.handleCreateRequest = function(data){
 	}
 }
 
-var count3 = 0;
 Bullet.destroy = function(id){
 	if(typeof Bullet.list[id] === 'undefined')
 		return;
@@ -203,7 +202,6 @@ Bullet.destroy = function(id){
     for(i in SOCKET_LIST){
         SOCKET_LIST[i].emit('deleteBullet', id);
     }
-    console.log("Destroyed bullet: " + count3++);
 }
 
 var Block = function(x,y,texture){
@@ -316,11 +314,34 @@ var Enemy = function(x, y, playerid){
 
 Enemy.list = {};
 
-Enemy.initializeEnemy = function(id) {
-    var enemy = Enemy(20, 20, id);
+Enemy.initializeEnemy = function(playerid, x, y) {
+    var enemy = Enemy(x, y, playerid);
     for(i in SOCKET_LIST){
-        SOCKET_LIST[i].emit('createEnemy', {id: enemy.id, position: [20, 20]});
+        SOCKET_LIST[i].emit('createEnemy', {id: enemy.id, position: [x, y]});
     }
+}
+
+Enemy.randomGenerateEnemy = function() {    
+    for(i in Player.list){ 
+        var spawnSide = Math.floor((Math.random() * 4) + 1);   
+        var x = 10;    
+        var y = 10;    
+        if(spawnSide == 0) {   
+            x = 960;   
+        }  
+        else if(spawnSide == 1) {  
+            x = 960;   
+            y = 1070;  
+        }  
+        else if(spawnSide == 2) {  
+            y = 540;   
+        }  
+        else { 
+            x = 1910;  
+            y = 540;   
+        }  
+        Enemy.initializeEnemy(i, x, y);    
+    }       
 }
 
 Enemy.generateCurrentStatusPackage = function(){
@@ -366,6 +387,8 @@ io.sockets.on('connection', function (socket) {
 
 //Physics loop
 var lastTime = Date.now();
+var zombieSpawnTimer = 0;
+
 setInterval(function () {
 	var delta = Date.now() - lastTime;
 	lastTime = Date.now();
@@ -384,6 +407,12 @@ setInterval(function () {
     }
     world.step(delta/1000);
 	Bullet.destroyOldBullets();
+
+    if(zombieSpawnTimer >= 100){
+        zombieSpawnTimer = 0;
+        Enemy.randomGenerateEnemy();
+    }
+    zombieSpawnTimer++;
 }, 1000/60);
 
 //Update clients loop
@@ -414,7 +443,7 @@ world.on("impact",function(evt){
 
 	   	//If bullet hit an enemy
 	    if(bodyA.shapes[0].collisionGroup === ENEMY || bodyB.shapes[0].collisionGroup === ENEMY){
-	   		console.log("Hitting bullet" + count2);
+	   		console.log("Hitting zombie" + count2);
 	   		count2++;
 	   		if(typeof Bullet.list[bulletBody.id] !== 'undefined' && !Bullet.list[bulletBody.id].hasCollided){
 	   			Bullet.list[bulletBody.id].hasCollided = true;
@@ -423,6 +452,8 @@ world.on("impact",function(evt){
 		   		}
 		   	}
 	    }
+        console.log("Bullet collision detected " + count2);
+        count2++;
        	Bullet.destroy(bulletBody.id);
     }
 });
