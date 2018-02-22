@@ -20,15 +20,14 @@ var Player = function (id) {
     self.damageCooldownCounter = 0;;
     self.hp = 100;
 
-    self.equippedItem = 1;
-    self.inventory = {
-        rifle: true,
-        shotgun: false,
-        sniper: false,
-    }
+    self.equippedItem = 3;
+    self.inventory = [null, 'rifle', 'shotgun', 'sniper'];
+    self.cooldowns = [0, 0, 0, 0];
 
     self.ammo = {
-        rifle: 10,
+        rifle: 50,
+        shotgun: 20,
+        sniper: 20,
     }
 
     self.killCount = 0;
@@ -76,6 +75,14 @@ var Player = function (id) {
         }
     }
 
+    self.updateCooldowns = function(){
+        for(var i = 0; i < self.cooldowns.length; i++){
+            if(self.cooldowns[i] > 0){
+                self.cooldowns[i]--;
+            }
+        }
+    }
+
     self.worldbounds = function () {
     	if (self.body.position[0] <= 0) 
     		if (self.body.velocity[0] < 0)
@@ -95,6 +102,7 @@ var Player = function (id) {
         self.updateVel();
         self.worldbounds();
         self.updateDamage();
+        self.updateCooldowns();
     }
 
     self.decreaseHealth = function(){
@@ -104,8 +112,8 @@ var Player = function (id) {
         }
     }
 
-    self.decreaseAmmo = function(){
-        self.ammo.rifle--;
+    self.decreaseAmmo = function(type){
+        self.ammo[type]--;
     }
 
     self.destroy = function(){
@@ -144,11 +152,31 @@ Player.handleShootRequest = function(socketid){
     if(!(socketid in Player.list))
         return;
     var player  = Player.list[socketid];
-    if(player.ammo.rifle > 0){
-        player.decreaseAmmo();
+    var equipped = player.equippedItem;
+    var inventory = player.inventory;
+    var ammo = player.ammo;
+    var cooldowns = player.cooldowns;
+    //Check weapon equipped, if they have ammo, and if they just shot
+    if(inventory[equipped] === 'rifle' && ammo.rifle > 0 && player.cooldowns[equipped] <= 0){
+        player.decreaseAmmo('rifle');
+        player.cooldowns[equipped] = constants.RIFLECOOLDOWN;
         var killedEnemy = GunHandler.rifleShootRequest(player.angle, player.body.position);
         if(killedEnemy){
             Player.list[socketid].killCount++;
+        }
+    } else if(inventory[equipped] === 'shotgun' && ammo.shotgun > 0 && player.cooldowns[equipped] <= 0){
+        player.decreaseAmmo('shotgun');
+        player.cooldowns[equipped] = constants.SHOTGUNCOOLDOWN;
+        var killedCount = GunHandler.shotgunShootRequest(player.angle, player.body.position);
+        if(killedCount > 0){
+            Player.list[socketid].killCount += killedCount;
+        }
+    } else if(inventory[equipped] === 'sniper' && ammo.sniper > 0 && player.cooldowns[equipped] <= 0){
+        player.decreaseAmmo('sniper');
+        player.cooldowns[equipped] = constants.SNIPERCOOLDOWN;
+        var killedCount = GunHandler.sniperShootRequest(player.angle, player.body.position);
+        if(killedCount > 0){
+            Player.list[socketid].killCount += killedCount;
         }
     }
 }

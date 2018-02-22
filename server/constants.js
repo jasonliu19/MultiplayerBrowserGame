@@ -1,5 +1,11 @@
 exports.ENEMYDAMAGE = 34;
-exports.GUNDAMAGE = 34;
+exports.RIFLEDAMAGE = 50;
+exports.SHOTGUNDAMAGE = 34;
+exports.SNIPERDAMAGE = 100;
+exports.RIFLECOOLDOWN = 8;
+exports.SHOTGUNCOOLDOWN = 20;
+exports.SNIPERCOOLDOWN = 40;
+
 exports.BLOCKSIZE = 64;
 exports.GROUNDITEMSIZE = 16;
 exports.DEFAULTBLOCKTEXTURE = 'grass';

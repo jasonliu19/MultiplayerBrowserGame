@@ -53,7 +53,7 @@
         self.ammo = {
             rifle:10,
         }
-        
+
         Player.list[id] = self;
         
         return self;
@@ -245,10 +245,6 @@
     }
     
 
-
-
-    var GunHandler = {};
-
     //VERY INEFFICIENT, consider using a single graphics to draw everything even if there is desync
     var LineDrawer = function(){
         var self={};
@@ -276,6 +272,8 @@
             LineDrawer.list[i].update();
         }
     }
+
+    var GunHandler = {};
 
     GunHandler.rifleShootRequest = function(){
         var angle = Player.thisPlayer.gameobject.angle;
