@@ -1,5 +1,4 @@
 var socketHandler = require('./sockethandler.js');
-
 var p2 = require('p2');
 var constants = require('./constants.js');
 var world = require('./physicshandler.js');
@@ -96,7 +95,7 @@ Enemy.onPlayerConnect = function(socket){
     Enemy.initializeEnemy(socket.id,20,20);
     
     var enemyData = Enemy.generateCurrentStatusPackage();
-    socket.emit('onInitialJoinPopulateZombies', enemyData)
+    socket.emit('onInitialJoinPopulateZombies', enemyData);
 }
 
 Enemy.test = 'abcd';

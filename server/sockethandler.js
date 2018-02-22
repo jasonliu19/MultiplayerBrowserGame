@@ -20,7 +20,6 @@ serv.listen(config.PORT, config.IP, function () {
 
 
 io.sockets.on('connection', function (socket) {
-	console.log("sockethandler working");
 	lastConnectedSocket = socket;
 });
 
@@ -33,8 +32,10 @@ exports.getLastConnectedSocket = function(){
 }
 
 exports.emitAll = function(emitMessage, data){
+    console.log("Emitall: " + emitMessage);
     for(var i in SOCKET_LIST){
         try {
+
         	SOCKET_LIST[i].emit(emitMessage, data);
         }
         catch(error) {

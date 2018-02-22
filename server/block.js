@@ -1,3 +1,4 @@
+var socketHandler = require('./sockethandler.js');
 var p2 = require('p2');
 var world = require('./physicshandler.js');
 var constants = require('./constants.js');
@@ -6,29 +7,46 @@ var BLOCKSIZE = constants.BLOCKSIZE;
 var Block = function(x,y,texture){
     var self = {};
     self.texture = texture;
+    self.id = Math.random() * 6;
     self.body = new p2.Body({
     	position:[x,y],
-    	type: p2.Body.KINEMATIC
+    	type: p2.Body.KINEMATIC,
+        id: self.id,
     });
     var blockShape = new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE});
     blockShape.collisionGroup = constants.BLOCK;
     blockShape.collisionMask = constants.ENEMY | constants.PLAYER | constants.BULLET;
     self.body.addShape(blockShape);
     world.addBody(self.body);
-    Block.list.push(self);
+
+    self.hp = 500;
+
+    self.decreaseHealth = function(damage){
+        var isDead = false;
+        self.hp -= damage;
+        if(self.hp <= 0){
+            Block.destroy(self.id);
+            isDead = true;
+        }
+        return isDead;
+    }
+
+    Block.list[self.id] = self;
     return self;
 }
 
 
-//Change to object if implementing destructable terrain
-Block.list = [];
+Block.list = {};
 
 Block.generateMapData = function(){
-	var data = [];
-	for(var i = 0; i < Block.list.length; i++){
-		data[i] = {texture: Block.list[i].texture, position: Block.list[i].body.position};
+	var pack = {};
+	for(var i in Block.list){
+		pack[i] = {
+            texture: Block.list[i].texture, 
+            position: Block.list[i].body.position
+        };
 	}
-	return data;
+	return pack;
 }
 
 //No left or up support yet
@@ -50,6 +68,12 @@ Block.createMap = function(){
 Block.onPlayerConnect = function(socket){
     var mapData = Block.generateMapData();
     socket.emit('createMap', mapData);
+}
+
+Block.destroy = function (id) {
+    world.removeBody(Block.list[id].body);
+    delete Block.list[id];
+    socketHandler.emitAll('destroyBlock', id);
 }
 
 module.exports = Block;

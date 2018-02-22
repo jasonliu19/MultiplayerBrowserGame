@@ -243,16 +243,31 @@
     }
     
     
-    var Block = function(texture, position){
+    var Block = function(texture, position, id){
+        var self = {};
+        self.id = id;
         self.gameobject = game.add.sprite(position[0], position[1], texture);
         self.gameobject.anchor.x = 0.5;
         self.gameobject.anchor.y = 0.5;
+        Block.list[id] = self;
+        return self;
     }
+
+    Block.list = {};
     
-    Block.makeMap = function(mapArray){
-        for(var i = 0; i < mapArray.length; i++) {
-            Block(mapArray[i].texture, mapArray[i].position);
+    Block.makeMap = function(mapData){
+        for(var i in mapData) {
+            Block(mapData[i].texture, mapData[i].position, i);
         }
+    }
+
+    Block.create = function(data){
+        Block(data.texture, data.position, data.id);
+    }
+
+    Block.destroy = function(id){
+        Block.list[id].gameobject.kill();
+        delete Block.list[id];
     }
     
 
@@ -401,13 +416,13 @@
             socket.on('deleteEnemy', Enemy.delete);
             socket.on('destroyGroundItem', GroundItem.destroy);
             socket.on('playerDisconnect', Player.onDisconnect);
-            // socket.on('bulletCreate', Bullet.initNewBullet);
-            // socket.on('deleteBullet', Bullet.destroy);
             socket.on('createMap', Block.makeMap);
             socket.on('createEnemy', Enemy.createEnemy);
             socket.on('updateClientOnEnemies', Enemy.updateAllTargetStatuses);
             socket.on('createAmmo', GroundItem.createAmmo);
             socket.on('createGunShot', GunHandler.createGunShot);
+            socket.on('createBlock', Block.create);
+            socket.on('destroyBlock', Block.destroy);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
 

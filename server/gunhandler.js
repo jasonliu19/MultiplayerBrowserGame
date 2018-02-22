@@ -3,12 +3,13 @@ var SOCKET_LIST = socketHandler.SOCKET_LIST;
 
 var p2 = require('p2');
 var Enemy = require('./enemy.js');
+var Block = require('./block.js');
 var world = require('./physicshandler.js')
 var constants = require('./constants.js');
 
 var GunHandler = {};
 GunHandler.rifleShootRequest = function(angle, position){
-    var distance = 500;
+    var distance = 800;
     var startx = position[0] + 50*Math.cos(angle/180*Math.PI);
     var starty = position[1] + 50*Math.sin(angle/180*Math.PI);
     var killedEnemy = false;
@@ -41,13 +42,13 @@ GunHandler.rifleShootRequest = function(angle, position){
 
 
 GunHandler.shotgunShootRequest = function(angle, position){
-    var distance = 300;
+    var distance = 500;
     var startx = position[0] + 50*Math.cos(angle/180*Math.PI);
     var starty = position[1] + 50*Math.sin(angle/180*Math.PI);
     var killCount = 0;
     var killedEnemy = false;
 
-    for(var offset = -4; offset <= 4; offset+=2){
+    for(var offset = -6; offset <= 6; offset+=3){
         killedEnemy = false;
         var newAngle = angle + offset;
         var ray = new p2.Ray({
@@ -62,9 +63,17 @@ GunHandler.shotgunShootRequest = function(angle, position){
         var hitPoint = p2.vec2.create();
         result.getHitPoint(hitPoint, ray);
 
+        //If enemy
         if(result.body !== null && result.body.shapes[0].collisionGroup === constants.ENEMY){
             if(Enemy.list[result.body.id]){
                 killedEnemy = Enemy.list[result.body.id].decreaseHealth(constants.SHOTGUNDAMAGE);
+            }
+        }
+
+        //If block
+        if(result.body !== null && result.body.shapes[0].collisionGroup === constants.BLOCK){
+            if(Block.list[result.body.id]){
+                Block.list[result.body.id].decreaseHealth(constants.SHOTGUNDAMAGE);
             }
         }
 
