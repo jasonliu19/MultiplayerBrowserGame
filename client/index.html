@@ -34,7 +34,7 @@
     //Player class
     var Player = function(id){
         var self = {};
-        self.gameobject = game.add.sprite(250, 250, 'dude');
+        self.gameobject = Player.group.create(250, 250, 'dude');
         self.gameobject.anchor.x = 0.5;
         self.gameobject.anchor.y = 0.5;
         self.ID = id;
@@ -56,6 +56,8 @@
 
     }
     Player.list = {};
+
+    Player.group;
 
     Player.thisPlayer;
 
@@ -168,7 +170,7 @@
     var Enemy = function(id, position){
         var self = {};
         self.id = id;
-        self.gameobject = game.add.sprite(position[0], position[1], 'zombie');
+        self.gameobject = Enemy.group.create(position[0], position[1], 'zombie');
         self.gameobject.anchor.x = 0.5;
         self.gameobject.anchor.y = 0.5;
         self.targetX = position[0];
@@ -179,6 +181,8 @@
     
     Enemy.list = {};
     
+    Enemy.group;
+
     Enemy.createEnemy = function(data) {
         Enemy(data.id, data.position);
         console.log("received enemy");
@@ -291,7 +295,7 @@
         self.id = id;
         self.category = category;
         self.type = type;
-        self.gameobject = game.add.sprite(position[0], position[1], type);
+        self.gameobject = GroundItem.group.create(position[0], position[1], type);
         self.gameobject.anchor.x = 0.5;
         self.gameobject.anchor.y = 0.5;
         GroundItem.list[self.id] = self;
@@ -299,6 +303,8 @@
     }
 
     GroundItem.list = {};
+
+    GroundItem.group;
 
     GroundItem.createAmmo = function(data){
         GroundItem('ammo', data.type, data.position, data.id);
@@ -356,6 +362,12 @@
         game.stage.backgroundColor = '#95BCC7';
         
         game.physics.startSystem(Phaser.Physics.P2JS);
+
+        //Create groups
+
+        GroundItem.group = game.add.group();
+        Enemy.group = game.add.group();
+        Player.group = game.add.group();
 
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
 
