@@ -275,11 +275,11 @@
 
     var GunHandler = {};
 
-    GunHandler.rifleShootRequest = function(){
+    GunHandler.shootRequest = function(){
         var angle = Player.thisPlayer.gameobject.angle;
         var position = [Player.thisPlayer.gameobject.x, Player.thisPlayer.gameobject.y];
         console.log("Requesting rifle shot: " + angle + position[0] + position[1]);
-        socket.emit('rifleShootRequest', socket.id);
+        socket.emit('shootRequest');
     }
 
     GunHandler.createGunShot = function(data){
@@ -435,7 +435,7 @@
             }
 
             document.onclick = function(){
-                GunHandler.rifleShootRequest();
+                GunHandler.shootRequest();
             }
 
 

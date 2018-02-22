@@ -145,7 +145,9 @@ Player.onConnect = function (socket) {
 
     //Notify other players
     socket.broadcast.emit('newPlayer', socket.id);
-    socket.on('rifleShootRequest', Player.handleShootRequest);
+    socket.on('shootRequest', function(){
+        Player.handleShootRequest(socket.id);
+    });
 }
 
 Player.handleShootRequest = function(socketid){
@@ -179,6 +181,10 @@ Player.handleShootRequest = function(socketid){
             Player.list[socketid].killCount += killedCount;
         }
     }
+}
+
+Player.handleInventoryChangeRequest = function(data){
+
 }
 
 Player.onDisconnect = function (socket) {
