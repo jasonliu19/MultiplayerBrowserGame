@@ -33,6 +33,12 @@ GunHandler.rifleShootRequest = function(angle, position){
         }
     }
 
+    //If block
+    if(result.body !== null && result.body.shapes[0].collisionGroup === constants.BLOCK){
+        if(Block.list[result.body.id]){
+            Block.list[result.body.id].decreaseHealth(constants.RIFLEDAMAGE);
+        }
+    }
     var length = Math.abs(result.getHitDistance(ray));
 
     socketHandler.emitAll('createGunShot', {startx: startx, starty: starty, angle: angle, length: length});
@@ -112,6 +118,12 @@ GunHandler.sniperShootRequest = function(angle, position){
                 }
             }
 
+            //If block
+            if(result.body !== null && result.body.shapes[0].collisionGroup === constants.BLOCK){
+                if(Block.list[result.body.id]){
+                    Block.list[result.body.id].decreaseHealth(500);
+                }
+            }
             if(killedEnemy)
                 killCount++;
         }

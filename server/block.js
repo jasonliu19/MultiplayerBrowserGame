@@ -61,8 +61,13 @@ Block.createLine = function(x, y, length, direction, texture){
 }
 
 Block.createMap = function(){
-    Block.createLine(0, 600, 10, 'right', 'tree');
-    Block.createLine(1000, 0, 10, 'down', 'grass');
+    // Block.createLine(0, 600, 10, 'right', 'tree');
+    // Block.createLine(1000, 0, 10, 'down', 'grass');
+    for(var i = 0; i < 35; i++){
+        var randx = Math.random()*constants.WORLDWIDTH;
+        var randy = Math.random()*constants.WORLDHEIGHT;
+        Block(randx, randy, 'tree');
+    }
 }
 
 Block.onPlayerConnect = function(socket){
