@@ -26,8 +26,8 @@ var Player = function (id) {
 
     self.ammo = {
         rifle: 50,
-        shotgun: 20,
-        sniper: 20,
+        shotgun: 500,
+        sniper: 500,
     }
 
     self.killCount = 0;
@@ -148,6 +148,10 @@ Player.onConnect = function (socket) {
     socket.on('shootRequest', function(){
         Player.handleShootRequest(socket.id);
     });
+
+    socket.on('inventoryChangeRequest', function(slotNumber){
+        Player.handleInventoryChangeRequest(socket.id, slotNumber);
+    });
 }
 
 Player.handleShootRequest = function(socketid){
@@ -183,7 +187,12 @@ Player.handleShootRequest = function(socketid){
     }
 }
 
-Player.handleInventoryChangeRequest = function(data){
+Player.handleInventoryChangeRequest = function(socketid, slotNumber){
+    console.log('change request: ' + slotNumber);
+    if(slotNumber <= 0 || slotNumber > 3)
+        return;
+    Player.list[socketid].equippedItem = slotNumber;
+    socketHandler.emitAll('inventoryChangeSuccess', {playerid: socketid, slotNumber: slotNumber});
 
 }
 
