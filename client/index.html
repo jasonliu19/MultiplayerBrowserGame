@@ -50,6 +50,10 @@
         self.hp = 100;
         self.killCount = 0;
 
+        self.ammo = {
+            rifle:10,
+        }
+        
         Player.list[id] = self;
         
         return self;
@@ -447,7 +451,7 @@
             LineDrawer.updateAll();
             scoreText.text = 'FPS: ' + game.time.fps;
             hp.text = 'HP: ' + Player.thisPlayer.hp;
-            ammo.text = 'Ammo: ' + Player.thisPlayer.ammo;
+            ammo.text = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
             kills.text = 'Kills: ' + Player.thisPlayer.killCount;
             Player.updateAllPositons();
             Player.updateAllRotations();

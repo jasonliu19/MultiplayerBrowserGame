@@ -17,10 +17,20 @@ var Player = function (id) {
 
     self.justDamaged = false;
     self.inContactWithEnemy = false;
-    self.damageCooldownCounter = 0;
-
+    self.damageCooldownCounter = 0;;
     self.hp = 100;
-    self.ammo = 10;
+
+    self.equippedItem = 1;
+    self.inventory = {
+        rifle: true,
+        shotgun: false,
+        sniper: false,
+    }
+
+    self.ammo = {
+        rifle: 10,
+    }
+
     self.killCount = 0;
 
     self.maxspeed = 150;
@@ -95,7 +105,7 @@ var Player = function (id) {
     }
 
     self.decreaseAmmo = function(){
-        self.ammo--;
+        self.ammo.rifle--;
     }
 
     self.destroy = function(){
@@ -134,7 +144,7 @@ Player.handleShootRequest = function(socketid){
     if(!(socketid in Player.list))
         return;
     var player  = Player.list[socketid];
-    if(player.ammo > 0){
+    if(player.ammo.rifle > 0){
         player.decreaseAmmo();
         var killedEnemy = GunHandler.rifleShootRequest(player.angle, player.body.position);
         if(killedEnemy){

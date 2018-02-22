@@ -33,7 +33,7 @@ world.on("beginContact",function(evt){
         if (otherBody.shapes[0].collisionGroup === constants.GROUNDITEM){
             try{
             	//Temporary, only for ammo with fixed quantity
-            	Player.list[playerBody.id].ammo += 50;
+            	Player.list[playerBody.id].ammo.rifle += 50;
             	GroundItem.list[otherBody.id].destroy();
 
             }catch(error){
