@@ -25,6 +25,7 @@ setInterval(function () {
         Player.onConnect(socket);
         Enemy.onPlayerConnect(socket);
         Block.onPlayerConnect(socket);
+        GroundItem.onPlayerConnect(socket);
         socket.on('disconnect', function () {
             socket.broadcast.emit('playerDisconnect', socket.id);
             Enemy.onPlayerDisconnect(socket);

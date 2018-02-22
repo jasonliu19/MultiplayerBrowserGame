@@ -37,7 +37,7 @@ GroundItem.generateCurrentStatusPackage = function(){
 	var pack = {};
 	for(var i in GroundItem.list){
 		pack[i] = {
-			position : GroundItem.list[i].position,
+			position : GroundItem.list[i].body.position,
 			category : GroundItem.list[i].category,
 			type : GroundItem.list[i].type
 		};
@@ -55,7 +55,7 @@ GroundItem.randomlySpawnAmmo = function(){
 	GroundItem.count++;
 }
 
-GroundItem.onPlayerConnect = function(){
+GroundItem.onPlayerConnect = function(socket){
 	var pack = GroundItem.generateCurrentStatusPackage();
     socket.emit('onInitialJoinPopulateGroundItems', pack);
 }

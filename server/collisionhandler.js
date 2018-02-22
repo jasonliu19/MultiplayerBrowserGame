@@ -20,12 +20,15 @@ world.on("beginContact",function(evt){
 	   	}
 
 	   	//If player hit enemy
-        try{
-        	Player.list[playerBody.id].inContactWithEnemy = true;
-        }catch(error){
-        	console.log(error);
+    	if (otherbody.shapes[0].collisionGroup === constants.ENEMY){
+            try{
+            	Player.list[playerBody.id].inContactWithEnemy = true;
+            }catch(error){
+            	console.log(error);
+            }
         }
     }
+
 });
 
 world.on("endContact",function(evt){

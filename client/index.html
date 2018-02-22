@@ -294,6 +294,11 @@
     GroundItems.createAmmo = function(data){
         GroundItems('ammo', data.type, data.position, data.id);
     }
+    GroundItems.onInitialJoinPopulate = function(data){
+        for(var id in data){
+            GroundItems('ammo', data[id].type, data[id].position, id);
+        }
+    }
 
     //Main phaser functions
 
@@ -350,6 +355,7 @@
             socket.on('newPlayer', Player.initNewPlayer);
             socket.on('onInitialJoinPopulatePlayers', Player.onInitialJoinPopulatePlayers);
             socket.on('onInitialJoinPopulateZombies', Enemy.onInitialJoinPopulateEnemies);
+            socket.on('onInitialJoinPopulateGroundItems', GroundItems.onInitialJoinPopulate);
             socket.on('deleteEnemy', Enemy.delete);
             socket.on('playerDisconnect', Player.onDisconnect);
             // socket.on('bulletCreate', Bullet.initNewBullet);
