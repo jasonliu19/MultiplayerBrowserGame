@@ -86,12 +86,19 @@
         Player.updateAllTargetPositions(data);
         Player.updateOtherTargetAngles(data);
         Player.updateAllHealthPoints(data);
+        Player.updateAllAmmo(data);
     }
 
 
     Player.updateAllHealthPoints = function(data){
         for (var id in data){
             Player.list[id].hp = data[id].hp; 
+        }
+    }
+
+    Player.updateAllAmmo = function(data){
+        for (var id in data){
+            Player.list[id].ammo = data[id].ammo; 
         }
     }
 
@@ -269,6 +276,25 @@
         console.log("Creating line");
     }
 
+
+    var GroundItems = function(category, type, position, id){
+        var self = {};
+        self.id = id;
+        self.category = category;
+        self.type = type;
+        self.gameobject = game.add.sprite(position[0], position[1], type);
+        self.gameobject.anchor.x = 0.5;
+        self.gameobject.anchor.y = 0.5;
+        GroundItems.list[self.id] = self;
+        return self;
+    }
+
+    GroundItems.list = {};
+
+    GroundItems.createAmmo = function(data){
+        GroundItems('ammo', data.type, data.position, data.id);
+    }
+
     //Main phaser functions
 
     //Loads assets
@@ -278,6 +304,7 @@
         game.load.image('block', '/assets/block.png');
         game.load.image('grass', '/assets/grass.png');
         game.load.image('tree', '/assets/tree.png');
+        game.load.image('rifleammo', '/assets/rifleammo.png');        
 
         // LOADING TILESET ASSETS
         this.load.tilemap('map', '/assets/Maps/map.csv');
@@ -288,6 +315,7 @@
     
     var scoreText;
     var hp;
+    var ammo;
     var startGame =false;
 
     // Tileset Variables
@@ -310,7 +338,9 @@
 
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
 
-        hp = game.add.text(16, 45, 'hp: ', { fontSize: '32px', fill: '#000' });
+        hp = game.add.text(16, 45, 'Ammo: ', { fontSize: '32px', fill: '#000' });
+
+        ammo = game.add.text(16, 74, 'Ammo: ', { fontSize: '32px', fill: '#000' });
 
         socket = io();
         socket.on('connect', function() {
@@ -327,6 +357,7 @@
             socket.on('createMap', Block.makeMap);
             socket.on('createEnemy', Enemy.createEnemy);
             socket.on('updateClientOnEnemies', Enemy.updateAllTargetStatuses);
+            socket.on('createAmmo', GroundItems.createAmmo);
             socket.on('createGunShot', GunHandler.createGunShot);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
@@ -380,6 +411,7 @@
             LineDrawer.updateAll();
             scoreText.text = 'FPS: ' + game.time.fps;
             hp.text = 'HP: ' + Player.thisPlayer.hp;
+            ammo.text = 'Ammo: ' + Player.thisPlayer.ammo;
             Player.updateAllPositons();
             Player.updateAllRotations();
             //Bullet.destroyOldBullets();

@@ -19,6 +19,9 @@ var Player = function (id) {
     self.inContactWithEnemy = false;
     self.damageCooldownCounter = 0;
 
+    self.hp = 100;
+    self.ammo = 10;
+
     self.maxspeed = 150;
     self.angle = 0;
     self.body = new p2.Body({
@@ -26,14 +29,10 @@ var Player = function (id) {
     	position:[250,250],
         id: id,
     });
-
-    self.hp = 100;
-
     var bodyShape = new p2.Box({width:64, height:64});
     bodyShape.collisionGroup = constants.PLAYER;
-    bodyShape.collisionMask = constants.ENEMY | constants.BLOCK | constants.PLAYER;
+    bodyShape.collisionMask = constants.GROUNDITEM | constants.ENEMY | constants.BLOCK | constants.PLAYER;
     self.body.addShape(bodyShape);
-
     world.addBody(self.body);
 
     self.updateVel = function () {
@@ -70,13 +69,13 @@ var Player = function (id) {
     	if (self.body.position[0] <= 0) 
     		if (self.body.velocity[0] < 0)
     			self.body.velocity[0] = 0;
-    	if (self.body.position[0] >= 1840)
+    	if (self.body.position[0] >= constants.WORLDWIDTH)
     		if (self.body.velocity[0] > 0)
     			self.body.velocity[0] = 0;
     	if (self.body.position[1] <= 0)
     		if (self.body.velocity[1] < 0) 
     			self.body.velocity[1] = 0;
-    	if (self.body.position[1] >= 970)
+    	if (self.body.position[1] >= constants.WORLDHEIGHT)
     		if (self.body.velocity[1] > 0)
     			self.body.velocity[1] = 0;
     }
@@ -92,6 +91,10 @@ var Player = function (id) {
             self.hp -= constants.ENEMYDAMAGE;
             self.justDamaged = true;
         }
+    }
+
+    self.decreaseAmmo = function(){
+        self.ammo--;
     }
 
     self.destroy = function(){
@@ -129,7 +132,11 @@ Player.onConnect = function (socket) {
 Player.handleShootRequest = function(socketid){
     if(!(socketid in Player.list))
         return;
-    GunHandler.rifleShootRequest(Player.list[socketid].angle, Player.list[socketid].body.position);
+    var player  = Player.list[socketid];
+    if(player.ammo > 0){
+        player.decreaseAmmo();
+        GunHandler.rifleShootRequest(player.angle, player.body.position);
+    }
 }
 
 Player.onDisconnect = function (socket) {
@@ -143,6 +150,7 @@ Player.generateCurrentStatusPackage = function(){
 			position : Player.list[i].body.position,
 			angle : Player.list[i].angle,
 			hp : Player.list[i].hp,
+            ammo : Player.list[i].ammo,
 		};
     }
 	return pack;

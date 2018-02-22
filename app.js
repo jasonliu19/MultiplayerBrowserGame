@@ -7,6 +7,7 @@ var Enemy = require('./server/enemy.js');
 var EnemyManager = require('./server/enemymanager.js');
 var constants = require('./server/constants.js');
 var Block = require('./server/block.js');
+var GroundItem = require('./server/grounditem.js');
 var world = require('./server/physicshandler.js');
 require('./server/collisionhandler.js');
 
@@ -33,8 +34,6 @@ setInterval(function () {
     }
 }, 1000/10);
 
-//Don't need to touch stuff below here
-//Handle initial socket connection
 
 
 //Physics loop
@@ -49,11 +48,11 @@ setInterval(function () {
         player.update();
     }
     world.step(delta/1000);
-	// Bullet.destroyOldBullets();
 
     if(zombieSpawnTimer >= 100){
         zombieSpawnTimer = 0;
         EnemyManager.randomGenerateEnemy();
+        GroundItem.randomlySpawnAmmo();
     }
     zombieSpawnTimer++;
 }, 1000/60);
@@ -75,15 +74,7 @@ setInterval(function () {
 
 
 setInterval(function () {
-    //function to path zombies
     EnemyManager.update();
-    // for(var i in Enemy.list){
-    //     var enemy = Enemy.list[i];
-    //     enemy.update();
-    //     //Check if enemy is out of bounds
-    //     enemy.worldbounds();
-    // }
-
 }, 1000/10);
 
 

@@ -20,8 +20,10 @@ world.on("beginContact",function(evt){
 	   	}
 
 	   	//If player hit enemy
-    	if (otherbody.shapes[0].collisionGroup === constants.ENEMY){
-            Player.list[playerBody.id].inContactWithEnemy = true;
+        try{
+        	Player.list[playerBody.id].inContactWithEnemy = true;
+        }catch(error){
+        	console.log(error);
         }
     }
 });
@@ -42,7 +44,11 @@ world.on("endContact",function(evt){
 
 	   	//If player hit enemy
     	if (otherbody.shapes[0].collisionGroup === constants.ENEMY){
-            Player.list[playerBody.id].inContactWithEnemy = false;
+            try{
+            	Player.list[playerBody.id].inContactWithEnemy = false;
+            }catch(error){
+            	console.log("Player left while being attacked");
+            }
         }
     }
 });
