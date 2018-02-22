@@ -8,6 +8,7 @@ var EnemyManager = require('./server/enemymanager.js');
 var constants = require('./server/constants.js');
 var Block = require('./server/block.js');
 var world = require('./server/physicshandler.js');
+require('./server/collisionhandler.js');
 
 var SOCKET_LIST = socketHandler.SOCKET_LIST;
 var io = socketHandler.io;
@@ -46,8 +47,6 @@ setInterval(function () {
 	for(var i in Player.list){
         var player = Player.list[i];
         player.update();
-        //Check if player is outofbounds
-        player.worldbounds();
     }
     world.step(delta/1000);
 	// Bullet.destroyOldBullets();
@@ -87,23 +86,4 @@ setInterval(function () {
 
 }, 1000/10);
 
-// world.on("impact",function(evt){
-//     var bodyA = evt.bodyA,
-//         bodyB = evt.bodyB;
-//     //If player
-//     if(bodyA.shapes[0].collisionGroup === PLAYER || bodyB.shapes[0].collisionGroup === PLAYER){
-// 	   	var playerBody, otherBody;
-// 	   	if (bodyA.shapes[0].collisionGroup === PLAYER) {
-// 	   		playerBody = bodyA;
-//             otherbody = bodyB;
-// 	   	} else {
-// 	    	playerBody = bodyB;
-// 	   		otherbody = bodyA;
-// 	   	}
 
-// 	   	//If player hit enemy
-//     	if (otherbody.shapes[0].collisionGroup === ENEMY){
-
-//         }
-//     }
-// });

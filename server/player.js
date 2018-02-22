@@ -15,16 +15,19 @@ var Player = function (id) {
     self.pressingDown= false;
     self.pressingUp= false;
 
+    self.justDamaged = false;
+    self.inContactWithEnemy = false;
+    self.damageCooldownCounter = 0;
+
     self.maxspeed = 150;
-
     self.angle = 0;
-
     self.body = new p2.Body({
     	mass:1,
     	position:[250,250],
+        id: id,
     });
 
-    self.healthpoints = 100;
+    self.hp = 100;
 
     var bodyShape = new p2.Box({width:64, height:64});
     bodyShape.collisionGroup = constants.PLAYER;
@@ -49,6 +52,20 @@ var Player = function (id) {
             self.body.velocity[1] = 0;
     }
 
+    self.updateDamage = function(){
+        if(self.justDamaged){
+            self.damageCooldownCounter++;
+        } else if (self.inContactWithEnemy){
+            self.decreaseHealth();
+        }
+
+
+        if(self.damageCooldownCounter > 30){
+            self.justDamaged = false;
+            self.damageCooldownCounter = 0;
+        }
+    }
+
     self.worldbounds = function () {
     	if (self.body.position[0] <= 0) 
     		if (self.body.velocity[0] < 0)
@@ -66,10 +83,20 @@ var Player = function (id) {
 
     self.update = function () {
         self.updateVel();
+        self.worldbounds();
+        self.updateDamage();
     }
 
     self.decreaseHealth = function(){
-        self.healthpoints -= ENEMYDAMAGE;
+        if(!self.justDamaged){
+            self.hp -= constants.ENEMYDAMAGE;
+            self.justDamaged = true;
+        }
+    }
+
+    self.destroy = function(){
+        world.removeBody(self.body);
+        delete Player.list[self.id];
     }
 
     Player.list[id] = self;
@@ -106,8 +133,7 @@ Player.handleShootRequest = function(socketid){
 }
 
 Player.onDisconnect = function (socket) {
-    world.removeBody(Player.list[socket.id].body);
-    delete Player.list[socket.id];
+    Player.list[socket.id].destroy();
 }
 
 Player.generateCurrentStatusPackage = function(){
@@ -116,14 +142,11 @@ Player.generateCurrentStatusPackage = function(){
 		pack[i] = {
 			position : Player.list[i].body.position,
 			angle : Player.list[i].angle,
-			healthpoints : Player.list[i].healthpoints,
+			hp : Player.list[i].hp,
 		};
     }
 	return pack;
 }
 
-Player.test = 'testing player';
-
-Player.getList = function(){return Player.list};
 
 module.exports = Player;

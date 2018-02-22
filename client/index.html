@@ -46,7 +46,7 @@
         self.gameobject.scale.setTo(0.3);
         self.gameobject.anchor.x = 100.0/313;
         self.gameobject.anchor.y = 120.0/207;
-        self.healthpoints = 100;
+        self.hp = 100;
 
         Player.list[id] = self;
         
@@ -91,7 +91,7 @@
 
     Player.updateAllHealthPoints = function(data){
         for (var id in data){
-            Player.list[id].healhpoints = data[id].healthpoints; 
+            Player.list[id].hp = data[id].hp; 
         }
     }
 
@@ -176,7 +176,7 @@
 
     Enemy.updateAllHealthPoints = function(data){
         for (var id in data){
-            Enemy.list[id].healhpoints = data[id].healthpoints; 
+            Enemy.list[id].healhpoints = data[id].hp; 
         }
     }
 
@@ -287,7 +287,7 @@
     }
     
     var scoreText;
-    var healthpoints;
+    var hp;
     var startGame =false;
 
     // Tileset Variables
@@ -310,7 +310,7 @@
 
         scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
 
-        healthpoints = game.add.text(16, 45, 'Healthpoints: ', { fontSize: '32px', fill: '#000' });
+        hp = game.add.text(16, 45, 'hp: ', { fontSize: '32px', fill: '#000' });
 
         socket = io();
         socket.on('connect', function() {
@@ -379,7 +379,7 @@
         if(startGame){
             LineDrawer.updateAll();
             scoreText.text = 'FPS: ' + game.time.fps;
-            healthpoints.text = 'Healthpoints: ' + Player.thisPlayer.healthpoints;
+            hp.text = 'HP: ' + Player.thisPlayer.hp;
             Player.updateAllPositons();
             Player.updateAllRotations();
             //Bullet.destroyOldBullets();
