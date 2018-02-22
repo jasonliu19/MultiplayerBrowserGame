@@ -4,6 +4,7 @@ var constants = require('./constants.js');
 
 var Player = require('./player.js');
 var Enemy = require('./enemy.js');
+var GroundItem = require('./grounditem.js');
 
 world.on("beginContact",function(evt){
     var bodyA = evt.bodyA,
@@ -13,16 +14,28 @@ world.on("beginContact",function(evt){
 	   	var playerBody, otherBody;
 	   	if (bodyA.shapes[0].collisionGroup === constants.PLAYER) {
 	   		playerBody = bodyA;
-            otherbody = bodyB;
+            otherBody = bodyB;
 	   	} else {
 	    	playerBody = bodyB;
-	   		otherbody = bodyA;
+	   		otherBody = bodyA;
 	   	}
 
 	   	//If player hit enemy
-    	if (otherbody.shapes[0].collisionGroup === constants.ENEMY){
+    	if (otherBody.shapes[0].collisionGroup === constants.ENEMY){
             try{
             	Player.list[playerBody.id].inContactWithEnemy = true;
+            }catch(error){
+            	console.log(error);
+            }
+        }
+
+        //If player hit grounditem
+        if (otherBody.shapes[0].collisionGroup === constants.GROUNDITEM){
+            try{
+            	//Temporary, only for ammo with fixed quantity
+            	Player.list[playerBody.id].ammo += 50;
+            	GroundItem.list[otherBody.id].destroy();
+
             }catch(error){
             	console.log(error);
             }
@@ -39,14 +52,14 @@ world.on("endContact",function(evt){
 	   	var playerBody, otherBody;
 	   	if (bodyA.shapes[0].collisionGroup === constants.PLAYER) {
 	   		playerBody = bodyA;
-            otherbody = bodyB;
+            otherBody = bodyB;
 	   	} else {
 	    	playerBody = bodyB;
-	   		otherbody = bodyA;
+	   		otherBody = bodyA;
 	   	}
 
 	   	//If player hit enemy
-    	if (otherbody.shapes[0].collisionGroup === constants.ENEMY){
+    	if (otherBody.shapes[0].collisionGroup === constants.ENEMY){
             try{
             	Player.list[playerBody.id].inContactWithEnemy = false;
             }catch(error){

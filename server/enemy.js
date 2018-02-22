@@ -46,10 +46,13 @@ var Enemy = function(x, y, playerid){
     
 
     self.decreaseHealth = function(){
-    	self.healthpoints -= constants.GUNDAMAGE;
+    	var isDead = false;
+        self.healthpoints -= constants.GUNDAMAGE;
     	if(self.healthpoints <= 0){
     		Enemy.destroy(self.id);
+            isDead = true;
     	}
+        return isDead;
     }
     
     Enemy.list[self.id] = self;

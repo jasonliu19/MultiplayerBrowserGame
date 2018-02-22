@@ -21,6 +21,7 @@ var Player = function (id) {
 
     self.hp = 100;
     self.ammo = 10;
+    self.killCount = 0;
 
     self.maxspeed = 150;
     self.angle = 0;
@@ -135,7 +136,10 @@ Player.handleShootRequest = function(socketid){
     var player  = Player.list[socketid];
     if(player.ammo > 0){
         player.decreaseAmmo();
-        GunHandler.rifleShootRequest(player.angle, player.body.position);
+        var killedEnemy = GunHandler.rifleShootRequest(player.angle, player.body.position);
+        if(killedEnemy){
+            Player.list[socketid].killCount++;
+        }
     }
 }
 
@@ -151,6 +155,7 @@ Player.generateCurrentStatusPackage = function(){
 			angle : Player.list[i].angle,
 			hp : Player.list[i].hp,
             ammo : Player.list[i].ammo,
+            killCount : Player.list[i].killCount,
 		};
     }
 	return pack;

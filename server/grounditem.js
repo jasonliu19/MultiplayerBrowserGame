@@ -24,6 +24,7 @@ var GroundItem = function(category, type, position, quantity){
     self.destroy = function(){
 	    world.removeBody(self.body);
 	    delete GroundItem.list[self.id];
+	    socketHandler.emitAll('destroyGroundItem', self.id);
 	}
 
 	GroundItem.list[self.id] = self;

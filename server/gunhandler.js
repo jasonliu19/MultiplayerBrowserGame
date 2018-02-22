@@ -11,6 +11,7 @@ GunHandler.rifleShootRequest = function(angle, position){
     var distance = 500;
     var startx = position[0] + 50*Math.cos(angle/180*Math.PI);
     var starty = position[1] + 50*Math.sin(angle/180*Math.PI);
+    var killedEnemy = false;
 
     var ray = new p2.Ray({
         mode: p2.Ray.CLOSEST, // or ANY
@@ -27,14 +28,14 @@ GunHandler.rifleShootRequest = function(angle, position){
 
     if(result.body !== null && result.body.shapes[0].collisionGroup === constants.ENEMY){
         if(Enemy.list[result.body.id]){
-            Enemy.list[result.body.id].decreaseHealth();
+            killedEnemy = Enemy.list[result.body.id].decreaseHealth();
         }
     }
 
     var length = Math.abs(result.getHitDistance(ray));
 
     socketHandler.emitAll('createGunShot', {startx: startx, starty: starty, angle: angle, length: length});
-
+    return killedEnemy;
 
 }
 

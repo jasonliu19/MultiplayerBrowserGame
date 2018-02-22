@@ -46,7 +46,9 @@
         self.gameobject.scale.setTo(0.3);
         self.gameobject.anchor.x = 100.0/313;
         self.gameobject.anchor.y = 120.0/207;
+        
         self.hp = 100;
+        self.killCount = 0;
 
         Player.list[id] = self;
         
@@ -87,6 +89,7 @@
         Player.updateOtherTargetAngles(data);
         Player.updateAllHealthPoints(data);
         Player.updateAllAmmo(data);
+        Player.updateAllKillCount(data);
     }
 
 
@@ -99,6 +102,12 @@
     Player.updateAllAmmo = function(data){
         for (var id in data){
             Player.list[id].ammo = data[id].ammo; 
+        }
+    }
+
+    Player.updateAllKillCount = function(data){
+        for (var id in data){
+            Player.list[id].killCount = data[id].killCount; 
         }
     }
 
@@ -277,7 +286,7 @@
     }
 
 
-    var GroundItems = function(category, type, position, id){
+    var GroundItem = function(category, type, position, id){
         var self = {};
         self.id = id;
         self.category = category;
@@ -285,19 +294,25 @@
         self.gameobject = game.add.sprite(position[0], position[1], type);
         self.gameobject.anchor.x = 0.5;
         self.gameobject.anchor.y = 0.5;
-        GroundItems.list[self.id] = self;
+        GroundItem.list[self.id] = self;
         return self;
     }
 
-    GroundItems.list = {};
+    GroundItem.list = {};
 
-    GroundItems.createAmmo = function(data){
-        GroundItems('ammo', data.type, data.position, data.id);
+    GroundItem.createAmmo = function(data){
+        GroundItem('ammo', data.type, data.position, data.id);
     }
-    GroundItems.onInitialJoinPopulate = function(data){
+
+    GroundItem.onInitialJoinPopulate = function(data){
         for(var id in data){
-            GroundItems('ammo', data[id].type, data[id].position, id);
+            GroundItem('ammo', data[id].type, data[id].position, id);
         }
+    }
+
+    GroundItem.destroy = function(id){
+        GroundItem.list[id].gameobject.kill();
+        delete GroundItem.list[id];
     }
 
     //Main phaser functions
@@ -326,6 +341,7 @@
     // Tileset Variables
     var map;
     var layer;
+    var kills;
 
     //Initializes game
     function create() {
@@ -346,6 +362,7 @@
         hp = game.add.text(16, 45, 'Ammo: ', { fontSize: '32px', fill: '#000' });
 
         ammo = game.add.text(16, 74, 'Ammo: ', { fontSize: '32px', fill: '#000' });
+        kills = game.add.text(16, 103, 'Kills: ', { fontSize: '32px', fill: '#000' });
 
         socket = io();
         socket.on('connect', function() {
@@ -355,15 +372,16 @@
             socket.on('newPlayer', Player.initNewPlayer);
             socket.on('onInitialJoinPopulatePlayers', Player.onInitialJoinPopulatePlayers);
             socket.on('onInitialJoinPopulateZombies', Enemy.onInitialJoinPopulateEnemies);
-            socket.on('onInitialJoinPopulateGroundItems', GroundItems.onInitialJoinPopulate);
+            socket.on('onInitialJoinPopulateGroundItems', GroundItem.onInitialJoinPopulate);
             socket.on('deleteEnemy', Enemy.delete);
+            socket.on('destroyGroundItem', GroundItem.destroy);
             socket.on('playerDisconnect', Player.onDisconnect);
             // socket.on('bulletCreate', Bullet.initNewBullet);
             // socket.on('deleteBullet', Bullet.destroy);
             socket.on('createMap', Block.makeMap);
             socket.on('createEnemy', Enemy.createEnemy);
             socket.on('updateClientOnEnemies', Enemy.updateAllTargetStatuses);
-            socket.on('createAmmo', GroundItems.createAmmo);
+            socket.on('createAmmo', GroundItem.createAmmo);
             socket.on('createGunShot', GunHandler.createGunShot);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
@@ -418,6 +436,7 @@
             scoreText.text = 'FPS: ' + game.time.fps;
             hp.text = 'HP: ' + Player.thisPlayer.hp;
             ammo.text = 'Ammo: ' + Player.thisPlayer.ammo;
+            kills.text = 'Kills: ' + Player.thisPlayer.killCount;
             Player.updateAllPositons();
             Player.updateAllRotations();
             //Bullet.destroyOldBullets();
