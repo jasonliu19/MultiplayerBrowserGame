@@ -192,7 +192,7 @@ Player.handleInventoryChangeRequest = function(socketid, slotNumber){
     if(slotNumber <= 0 || slotNumber > 3)
         return;
     Player.list[socketid].equippedItem = slotNumber;
-    socketHandler.emitAll('inventoryChangeSuccess', {playerid: socketid, slotNumber: slotNumber});
+    // socketHandler.emitAll('inventoryChangeSuccess', {playerid: socketid, slotNumber: slotNumber});
 
 }
 
@@ -209,6 +209,7 @@ Player.generateCurrentStatusPackage = function(){
 			hp : Player.list[i].hp,
             ammo : Player.list[i].ammo,
             killCount : Player.list[i].killCount,
+            equipped : Player.list[i].equippedItem,
 		};
     }
 	return pack;

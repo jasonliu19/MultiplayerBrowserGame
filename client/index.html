@@ -98,6 +98,7 @@
         Player.updateAllHealthPoints(data);
         Player.updateAllAmmo(data);
         Player.updateAllKillCount(data);
+        Player.updateAllEquipped(data);
     }
 
 
@@ -116,6 +117,12 @@
     Player.updateAllKillCount = function(data){
         for (var id in data){
             Player.list[id].killCount = data[id].killCount; 
+        }
+    }
+
+    Player.updateAllEquipped = function(data){
+        for (var id in data){
+            Player.list[id].equipped = data[id].equipped; 
         }
     }
 
@@ -478,7 +485,15 @@
             LineDrawer.updateAll();
             scoreText.text = 'FPS: ' + game.time.fps;
             hp.text = 'HP: ' + Player.thisPlayer.hp;
-            ammo.text = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
+            if(Player.thisPlayer.equipped === 1) {
+                ammo.text = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
+            }
+            else if(Player.thisPlayer.equipped === 2) {
+                ammo.text = 'Ammo: ' + Player.thisPlayer.ammo.shotgun;
+            }
+            else if(Player.thisPlayer.equipped === 3) {
+                ammo.text = 'Ammo: ' + Player.thisPlayer.ammo.sniper;
+            }
             kills.text = 'Kills: ' + Player.thisPlayer.killCount;
             Player.updateAllPositons();
             Player.updateAllRotations();
