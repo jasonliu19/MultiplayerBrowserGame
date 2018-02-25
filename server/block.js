@@ -66,8 +66,9 @@ Block.initMap = function(){
     // Block.createLine(0, 600, 10, 'right', 'tree');
     // Block.createLine(1000, 0, 10, 'down', 'grass');
     for(var i = 0; i < 35; i++){
-        var randx = Math.random()*constants.WORLDWIDTH;
-        var randy = Math.random()*constants.WORLDHEIGHT;
+        //Force block to be created on a grid
+        var randx = Math.floor(Math.random()*constants.WORLDWIDTH/constants.BLOCKSIZE)*constants.BLOCKSIZE;
+        var randy = Math.floor(Math.random()*constants.WORLDHEIGHT/constants.BLOCKSIZE)*constants.BLOCKSIZE;
         Block(randx, randy, 'tree');
     }
 }
@@ -77,10 +78,12 @@ Block.create = function (x,y, texture) {
     socketHandler.emitAll('createBlock', {position: block.body.position, texture: texture, id: block.id});
 }
 
+
 Block.createRandomTrees = function(){
     for(var i = Block.count; i < 35; i++){
-        var randx = Math.random()*constants.WORLDWIDTH;
-        var randy = Math.random()*constants.WORLDHEIGHT;
+        //Force block to be created on a grid
+        var randx = Math.floor(Math.random()*constants.WORLDWIDTH/constants.BLOCKSIZE)*constants.BLOCKSIZE;
+        var randy = Math.floor(Math.random()*constants.WORLDHEIGHT/constants.BLOCKSIZE)*constants.BLOCKSIZE;
         Block.create(randx, randy, 'tree');
     }    
 }
