@@ -16,7 +16,7 @@ var io = socketHandler.io;
 
 var lastConnectedSocket = null;
 
-Block.createMap();
+Block.initMap();
 setInterval(function () {
     if(lastConnectedSocket != socketHandler.getLastConnectedSocket()){
         var socket = socketHandler.getLastConnectedSocket();
@@ -75,6 +75,7 @@ setInterval(function () {
 
 
 setInterval(function () {
+    Block.update();
     EnemyManager.update();
 }, 1000/10);
 

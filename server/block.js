@@ -32,11 +32,13 @@ var Block = function(x,y,texture){
     }
 
     Block.list[self.id] = self;
+    Block.count++;
     return self;
 }
 
 
 Block.list = {};
+Block.count = 0;
 
 Block.generateMapData = function(){
 	var pack = {};
@@ -60,7 +62,7 @@ Block.createLine = function(x, y, length, direction, texture){
 	}
 }
 
-Block.createMap = function(){
+Block.initMap = function(){
     // Block.createLine(0, 600, 10, 'right', 'tree');
     // Block.createLine(1000, 0, 10, 'down', 'grass');
     for(var i = 0; i < 35; i++){
@@ -68,6 +70,19 @@ Block.createMap = function(){
         var randy = Math.random()*constants.WORLDHEIGHT;
         Block(randx, randy, 'tree');
     }
+}
+
+Block.create = function (x,y, texture) {
+    var block = Block(x, y, texture);
+    socketHandler.emitAll('createBlock', {position: block.body.position, texture: texture, id: block.id});
+}
+
+Block.createRandomTrees = function(){
+    for(var i = Block.count; i < 35; i++){
+        var randx = Math.random()*constants.WORLDWIDTH;
+        var randy = Math.random()*constants.WORLDHEIGHT;
+        Block.create(randx, randy, 'tree');
+    }    
 }
 
 Block.onPlayerConnect = function(socket){
@@ -78,7 +93,12 @@ Block.onPlayerConnect = function(socket){
 Block.destroy = function (id) {
     world.removeBody(Block.list[id].body);
     delete Block.list[id];
+    Block.count--;
     socketHandler.emitAll('destroyBlock', id);
+}
+
+Block.update = function () {
+    Block.createRandomTrees();
 }
 
 module.exports = Block;
