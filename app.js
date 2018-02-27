@@ -50,10 +50,14 @@ setInterval(function () {
     }
     world.step(delta/1000);
 
-    if(zombieSpawnTimer >= 100){
+    if(zombieSpawnTimer >= 3000) {
         zombieSpawnTimer = 0;
-        EnemyManager.randomGenerateEnemy();
+    }
+    else if(zombieSpawnTimer >= 2000){
         GroundItem.randomlySpawnAmmo();
+    }
+    else if(zombieSpawnTimer%100 == 0){
+        EnemyManager.randomGenerateEnemy();
     }
     zombieSpawnTimer++;
 }, 1000/60);
