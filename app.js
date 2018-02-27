@@ -76,7 +76,14 @@ setInterval(function () {
 
 setInterval(function () {
     Block.update();
-    EnemyManager.update();
-}, 1000/10);
+}, 2000);
+
+
+setInterval(function () {
+	EnemyManager.update();
+}, 200);
+
+
+
 
 
