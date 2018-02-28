@@ -40,8 +40,9 @@ setInterval(function () {
 //Physics loop
 var lastTime = Date.now();
 var zombieSpawnTimer = 0;
-var wavePauseTime = 3000;
-var waveLength = 2000;
+var wavePauseTime = 60000;
+var waveLength = 30000;
+var waveNumber = 1;
 
 setInterval(function () {
 	var delta = Date.now() - lastTime;
@@ -52,19 +53,38 @@ setInterval(function () {
     }
     world.step(delta/1000);
 
-    if(zombieSpawnTimer >= wavePauseTime && wavePauseTime >= 600) {
+    // limit time between waves to be 10 seconds at shortest
+    if(zombieSpawnTimer >= wavePauseTime && wavePauseTime >= 10000) {
         zombieSpawnTimer = 0;
-        wavePauseTime -= 100;
+        waveLength += 3000;
+        waveNumber++;
+        // spawn waveNumber extra enemies at the beginning of each wave
+        for(i = 0; i < waveNumber; i++) {
+            for(j = 0; j < waveNumber; j++) {
+                EnemyManager.randomGenerateEnemy();
+            }
+        }
     }
     else if(zombieSpawnTimer >= wavePauseTime) {
+        // spawn waveNumber extra enemies at the beginning of each wave
+        for(i = 0; i < waveNumber; i++) {
+            for(j = 0; j < waveNumber; j++) {
+                EnemyManager.randomGenerateEnemy();
+            }
+        }
         zombieSpawnTimer = 0;
+        wavePauseTime -= 3000;
+        waveLength += 3000;
+        waveNumber++;
     }
-    else if(zombieSpawnTimer >= waveLength){
-        GroundItem.randomlySpawnAmmo();
-        waveLength += 200;
-    }
-    else if(zombieSpawnTimer%100 == 0){
+    else if(zombieSpawnTimer%100 == 0 && zombieSpawnTimer <= waveLength){
         EnemyManager.randomGenerateEnemy();
+    }
+    if(zombieSpawnTimer == 0){
+        EnemyManager.randomGenerateEnemy();
+    }
+    if(zombieSpawnTimer%500 == 0){
+        GroundItem.randomlySpawnAmmo();
     }
     zombieSpawnTimer++;
 }, 1000/60);
