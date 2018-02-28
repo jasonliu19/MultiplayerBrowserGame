@@ -1,8 +1,7 @@
 var Enemy = require('./enemy.js');
 var Player = require('./player.js');
 
-
-var EnemyManager = {}
+var EnemyManager = {};
 
 EnemyManager.updateVelocity = function(){
     for(var id in Enemy.list){

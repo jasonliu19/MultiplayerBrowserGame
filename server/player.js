@@ -4,7 +4,7 @@ var p2 = require('p2');
 var constants = require('./constants.js');
 var world = require('./physicshandler.js');
 var GunHandler = require('./gunhandler.js');
-
+var BuildingManager = require('./buildingmanager.js');
 
 var Player = function (id) {
     var self = {};
@@ -21,13 +21,17 @@ var Player = function (id) {
     self.hp = 100;
 
     self.equippedItem = 3;
-    self.inventory = [null, 'rifle', 'shotgun', 'sniper'];
-    self.cooldowns = [0, 0, 0, 0];
+    self.inventory = [null, 'rifle', 'shotgun', 'sniper', 'tool', 'wood'];
+    self.cooldowns = [0, 0, 0, 0, 0, 0, 0, 0];
 
     self.ammo = {
         rifle: 50,
         shotgun: 500,
         sniper: 500,
+    }
+
+    self.resources = {
+        wood: 5,
     }
 
     self.killCount = 0;
@@ -145,8 +149,8 @@ Player.onConnect = function (socket) {
 
     //Notify other players
     socket.broadcast.emit('newPlayer', socket.id);
-    socket.on('shootRequest', function(){
-        Player.handleShootRequest(socket.id);
+    socket.on('useRequest', function(cursorPosition){
+        Player.handleUseRequest(socket.id, cursorPosition);
     });
 
     socket.on('inventoryChangeRequest', function(slotNumber){
@@ -154,7 +158,7 @@ Player.onConnect = function (socket) {
     });
 }
 
-Player.handleShootRequest = function(socketid){
+Player.handleUseRequest = function(socketid, cursorPosition){
     if(!(socketid in Player.list))
         return;
     var player  = Player.list[socketid];
@@ -184,13 +188,27 @@ Player.handleShootRequest = function(socketid){
         if(killedCount > 0){
             Player.list[socketid].killCount += killedCount;
         }
+    } 
+    else if (inventory[equipped] === 'tool' && player.cooldowns[equipped] <= 0){
+        player.cooldowns[equipped] = constants.TOOLCOOLDOWN;
+        var resourceCollected = GunHandler.toolUseRequest(player.angle, player.body.position);
+        if (resourceCollected !== null){
+            player.resources[resourceCollected]++;
+        }
+    } else if (inventory[equipped] === 'wood' && player.cooldowns[equipped] <= 0){
+        player.cooldowns[equipped] = constants.TOOLCOOLDOWN;
+        if (player.resources['wood'] > 0){
+            BuildingManager.placeWood(cursorPosition[0], cursorPosition[1]);
+            player.resources['wood']--;
+        }
     }
 }
 
 Player.handleInventoryChangeRequest = function(socketid, slotNumber){
     console.log('change request: ' + slotNumber);
-    if(slotNumber <= 0 || slotNumber > 3)
+    if(slotNumber <= 0 || slotNumber > Player.list[socketid].inventory.length-1 || Player.list[socketid].inventory[slotNumber] == null)
         return;
+
     Player.list[socketid].equippedItem = slotNumber;
     // socketHandler.emitAll('inventoryChangeSuccess', {playerid: socketid, slotNumber: slotNumber});
 
@@ -214,6 +232,8 @@ Player.generateCurrentStatusPackage = function(){
     }
 	return pack;
 }
+
+
 
 
 module.exports = Player;

@@ -308,11 +308,8 @@
 
     var GunHandler = {};
 
-    GunHandler.shootRequest = function(){
-        var angle = Player.thisPlayer.gameobject.angle;
-        var position = [Player.thisPlayer.gameobject.x, Player.thisPlayer.gameobject.y];
-        console.log("Requesting rifle shot: " + angle + position[0] + position[1]);
-        socket.emit('shootRequest');
+    GunHandler.useRequest = function(){
+        socket.emit('useRequest', [game.input.mousePointer.x, game.input.mousePointer.y]);
     }
 
     GunHandler.createGunShot = function(data){
@@ -363,6 +360,7 @@
         game.load.image('bullet', '/assets/bullet2.png');
         game.load.image('dude', '/assets/player.png');
         game.load.image('block', '/assets/block.png');
+        game.load.image('wood', '/assets/wood.png');
         game.load.image('grass', '/assets/grass.png');
         game.load.image('tree', '/assets/tree.png');
         game.load.image('rifleammo', '/assets/rifleammo.png');        
@@ -448,8 +446,8 @@
                 else if(ev.keyCode === 87){ //w
                     Inputs.up = true;
                 }
-                else if (ev.keyCode >=49 && ev.keyCode <=51){ //1-3
-                    Player.inventoryChangeRequest(ev.keyCode-48); //Adjusting to 1-3
+                else if (ev.keyCode >=49 && ev.keyCode <=53){ //1-5
+                    Player.inventoryChangeRequest(ev.keyCode-48); //Adjusting to 1-5
                 }
                 Player.updateServer();
             }
@@ -471,7 +469,7 @@
             }
 
             document.onmousedown = function(){
-                GunHandler.shootRequest();
+                GunHandler.useRequest();
             }
 
 

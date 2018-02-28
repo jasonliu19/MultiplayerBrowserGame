@@ -138,4 +138,72 @@ GunHandler.sniperShootRequest = function(angle, position){
 
 }
 
+// GunHandler.toolUseRequest = function(angle, position){
+//     var distance = 64;
+//     var startx = position[0];
+//     var starty = position[1];
+//     var destroyedBlock = false;
+//     var ray = new p2.Ray({
+//         mode: p2.Ray.ALL, // or ANY
+//         from: [position[0], position[1]],
+//         to: [position[0]+distance*Math.cos(angle/180*Math.PI), position[1]+distance*Math.sin(angle/180*Math.PI)],
+//         callback: function(result){
+//             var hitPoint = p2.vec2.create();
+//             result.getHitPoint(hitPoint, ray);
+
+//             //If block
+//             if(result.body !== null && result.body.shapes[0].collisionGroup === constants.BLOCK){
+//                 if(Block.list[result.body.id]){
+//                     destroyedBlock = Block.list[result.body.id].decreaseHealth(constants.TOOLDAMAGETOBLOCK);
+//                 }
+//             }
+
+//             if(destroyedBlock){
+//                 return 'wood'
+//             }
+
+//         }
+//     });
+    
+//     var result = new p2.RaycastResult();
+//     world.raycast(result, ray);
+//     var length = distance;
+//     socketHandler.emitAll('createGunShot', {startx: startx, starty: starty, angle: angle, length: length});
+//     return null;
+    
+// }
+
+GunHandler.toolUseRequest = function(angle, position){
+    var distance = 120;
+    var startx = position[0] + 50*Math.cos(angle/180*Math.PI);
+    var starty = position[1] + 50*Math.sin(angle/180*Math.PI);
+    var destroyedBlock = false;
+
+    var ray = new p2.Ray({
+        mode: p2.Ray.CLOSEST, // or ANY
+        from: [startx, starty],
+        to: [position[0]+distance*Math.cos(angle/180*Math.PI), position[1]+distance*Math.sin(angle/180*Math.PI)],
+    });
+    var result = new p2.RaycastResult();
+    world.raycast(result, ray);
+
+    // Get the hit point
+    var hitPoint = p2.vec2.create();
+    result.getHitPoint(hitPoint, ray);
+
+    //If block
+    if(result.body !== null && result.body.shapes[0].collisionGroup === constants.BLOCK){
+            if(Block.list[result.body.id]){
+                destroyedBlock = Block.list[result.body.id].decreaseHealth(constants.TOOLDAMAGETOBLOCK);
+            }
+    }
+    var length = Math.abs(result.getHitDistance(ray));
+
+    socketHandler.emitAll('createGunShot', {startx: startx, starty: starty, angle: angle, length: length});
+    if(destroyedBlock)
+        return 'wood';
+    return null;
+
+}
+
 module.exports = GunHandler;
