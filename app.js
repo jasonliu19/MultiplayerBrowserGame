@@ -40,6 +40,8 @@ setInterval(function () {
 //Physics loop
 var lastTime = Date.now();
 var zombieSpawnTimer = 0;
+var wavePauseTime = 3000;
+var waveLength = 2000;
 
 setInterval(function () {
 	var delta = Date.now() - lastTime;
@@ -50,11 +52,16 @@ setInterval(function () {
     }
     world.step(delta/1000);
 
-    if(zombieSpawnTimer >= 3000) {
+    if(zombieSpawnTimer >= wavePauseTime && wavePauseTime >= 600) {
+        zombieSpawnTimer = 0;
+        wavePauseTime -= 100;
+    }
+    else if(zombieSpawnTimer >= wavePauseTime) {
         zombieSpawnTimer = 0;
     }
-    else if(zombieSpawnTimer >= 2000){
+    else if(zombieSpawnTimer >= waveLength){
         GroundItem.randomlySpawnAmmo();
+        waveLength += 200;
     }
     else if(zombieSpawnTimer%100 == 0){
         EnemyManager.randomGenerateEnemy();
