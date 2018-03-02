@@ -1,5 +1,7 @@
 var Enemy = require('./enemy.js');
 var Player = require('./player.js');
+var Constants = require('./constants.js');
+var Mathfunc = require('./mathfunc.js');
 
 var EnemyManager = {};
 
@@ -27,8 +29,36 @@ EnemyManager.updateVelocity = function(){
 	}
 }
 
-EnemyManager.update = function(){
+EnemyManager.updateAttack = function(){
+    for (var id in Enemy.list){
+        try{
+            var self = Enemy.list[id];
+            //console.log('Initiate attack of  '+String(id)+'  zombie',self.initiateAttack);
+            if (self.initiateAttack){
+                self.attackDelayCounter ++;
+                //console.log('Attack delay counter of  '+String(id)+'  zombie',self.attackDelayCounter);
+                if (self.attackDelayCounter >= Constants.HITDELAY){
+                    //console.log(self.attackTarget,self.attackTargetId===Enemy.list[id].playerid,self.attackDelayCounter,self.initiateAttack);
+                    if (self.attackTarget === 'PLAYER'){
+                        //console.log(Mathfunc.distance(self.body.position,Player.list[self.attackTargetId].body.position));
+                        if (Mathfunc.distance(self.body.position,Player.list[self.attackTargetId].body.position) <= Constants.HITRADIUS){
+                            Player.list[self.attackTargetId].decreaseHealth();
+                        }
+                    }
+                    //add more else ifs for zombies hitting other things but I (David) would heavily suggest refactoring and restructuring
+                    self.attackDelayCounter = 0;
+                    self.initiateAttack = false;
+                }
+            }
+        } catch (error){
+            console.log(error);
+        }
+    }
+}
+
+EnemyManager.update = function(command){
 	EnemyManager.updateVelocity();
+    EnemyManager.updateAttack();
 }
 
 EnemyManager.randomGenerateEnemy = function() {    
@@ -53,5 +83,6 @@ EnemyManager.randomGenerateEnemy = function() {
         Enemy.initializeEnemy(i, x, y);    
     }       
 }
+
 
 module.exports = EnemyManager;

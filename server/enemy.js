@@ -10,6 +10,10 @@ var Enemy = function(x, y, playerid){
     self.maxspeed = 75;
     self.playerid = playerid;
     self.healthpoints = 100;
+    self.initiateAttack = false;
+    self.attackDelayCounter = 0;
+    self.attackTarget = "";
+    self.attackTargetId = "";
 
     self.angle = 0;
 
@@ -54,6 +58,13 @@ var Enemy = function(x, y, playerid){
         return isDead;
     }
     
+    self.attackSequence = function(target, targetId){
+        self.initiateAttack = true;
+        self.attackTarget = target;
+        self.attackTargetId = targetId;
+        //console.log('******************',self.initiateAttack,self.attackTarget,self.attackTargetId);
+    }
+
     Enemy.list[self.id] = self;
     return self;
 }
