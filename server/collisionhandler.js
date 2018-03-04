@@ -24,7 +24,7 @@ world.on("beginContact",function(evt){
     	if (otherBody.shapes[0].collisionGroup === constants.ENEMY){
             try{
             	//Player.list[playerBody.id].inContactWithEnemy = true;        just commenting this out in case we need to revert
-                Enemy.list[otherBody.id].attackSequence('PLAYER',playerBody.id);
+                Enemy.list[otherBody.id].attackSequence(constants.PLAYER,playerBody.id);
             }catch(error){
             	console.log(error);
             }

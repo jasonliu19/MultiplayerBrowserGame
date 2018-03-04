@@ -1,6 +1,6 @@
 var Enemy = require('./enemy.js');
 var Player = require('./player.js');
-var Constants = require('./constants.js');
+var constants = require('./constants.js');
 var Mathfunc = require('./mathfunc.js');
 
 var EnemyManager = {};
@@ -33,15 +33,15 @@ EnemyManager.updateAttack = function(){
     for (var id in Enemy.list){
         try{
             var self = Enemy.list[id];
-            //console.log('Initiate attack of  '+String(id)+'  zombie',self.initiateAttack);
+            
             if (self.initiateAttack){
                 self.attackDelayCounter ++;
-                //console.log('Attack delay counter of  '+String(id)+'  zombie',self.attackDelayCounter);
-                if (self.attackDelayCounter >= Constants.HITDELAY){
-                    //console.log(self.attackTarget,self.attackTargetId===Enemy.list[id].playerid,self.attackDelayCounter,self.initiateAttack);
-                    if (self.attackTarget === 'PLAYER'){
-                        //console.log(Mathfunc.distance(self.body.position,Player.list[self.attackTargetId].body.position));
-                        if (Mathfunc.distance(self.body.position,Player.list[self.attackTargetId].body.position) <= Constants.HITRADIUS){
+                
+                if (self.attackDelayCounter >= constants.HITDELAY){
+                    
+                    if (self.attackTarget === constants.PLAYER){
+                        
+                        if (Mathfunc.distance(self.body.position,Player.list[self.attackTargetId].body.position) <= constants.HITRADIUS){
                             Player.list[self.attackTargetId].decreaseHealth();
                         }
                     }
