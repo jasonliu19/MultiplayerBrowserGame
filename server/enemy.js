@@ -10,6 +10,7 @@ var Enemy = function(x, y, playerid){
     self.maxspeed = 75;
     self.playerid = playerid;
     self.healthpoints = 100;
+
     self.initiateAttack = false;
     self.attackDelayCounter = 0;
     self.attackTarget = "";
@@ -69,6 +70,7 @@ var Enemy = function(x, y, playerid){
     return self;
 }
 
+Enemy.opposeBodies = new Set([constants.PLAYER/*, constants.BLOCK*/]);
 Enemy.list = {};
 
 Enemy.initializeEnemy = function(playerid, x, y) {

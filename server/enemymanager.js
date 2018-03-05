@@ -45,7 +45,7 @@ EnemyManager.updateAttack = function(){
                             Player.list[self.attackTargetId].decreaseHealth();
                         }
                     }
-                    //add more else ifs for zombies hitting other things but I (David) would heavily suggest refactoring and restructuring
+                    //add more else ifs for zombies hitting other things but refactoring and restructuring is heavily recommended
                     self.attackDelayCounter = 0;
                     self.initiateAttack = false;
                 }
