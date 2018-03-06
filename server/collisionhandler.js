@@ -5,6 +5,7 @@ var constants = require('./constants.js');
 var Player = require('./player.js');
 var Enemy = require('./enemy.js');
 var GroundItem = require('./grounditem.js');
+var Block = require('./block.js');
 
 //Helper functions
 function orStatementHelper(bodyA, bodyB, value){

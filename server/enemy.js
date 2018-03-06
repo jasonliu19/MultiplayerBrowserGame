@@ -70,7 +70,7 @@ var Enemy = function(x, y, playerid){
     return self;
 }
 
-Enemy.opposeBodies = new Set([constants.PLAYER/*, constants.BLOCK*/]);
+Enemy.opposeBodies = new Set([constants.PLAYER, constants.BLOCK]);
 Enemy.list = {};
 
 Enemy.initializeEnemy = function(playerid, x, y) {

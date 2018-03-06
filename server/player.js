@@ -109,9 +109,9 @@ var Player = function (id) {
         self.updateCooldowns();
     }
 
-    self.decreaseHealth = function(){
+    self.decreaseHealth = function(damage){
         if(!self.justDamaged){
-            self.hp -= constants.ENEMYDAMAGE;
+            self.hp -= damage;
             self.justDamaged = true;
         }
     }

@@ -2,6 +2,7 @@ var Enemy = require('./enemy.js');
 var Player = require('./player.js');
 var constants = require('./constants.js');
 var Mathfunc = require('./mathfunc.js');
+var Block = require('./block.js');
 
 var EnemyManager = {};
 
@@ -40,9 +41,16 @@ EnemyManager.updateAttack = function(){
                 if (self.attackDelayCounter >= constants.HITDELAY){
                     
                     if (self.attackTarget === constants.PLAYER){
-                        
-                        if (Mathfunc.distance(self.body.position,Player.list[self.attackTargetId].body.position) <= constants.HITRADIUS){
-                            Player.list[self.attackTargetId].decreaseHealth();
+                        playerBody = Player.list[self.attackTargetId];
+                        if (Mathfunc.distance(self.body.position,playerBody.body.position) <= constants.HITRADIUS){
+                            playerBody.decreaseHealth(constants.ENEMYDAMAGE);
+                        }
+                    }
+
+                    else if (self.attackTarget === constants.BLOCK){
+                        blockBody = Block.list[self.attackTargetId];
+                        if (Mathfunc.distance(self.body.position,blockBody.body.position) <= constants.HITRADIUS){
+                            blockBody.decreaseHealth(constants.ENEMYDAMAGE);
                         }
                     }
                     //add more else ifs for zombies hitting other things but refactoring and restructuring is heavily recommended
