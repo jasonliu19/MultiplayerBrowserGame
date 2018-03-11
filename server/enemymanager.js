@@ -40,14 +40,14 @@ EnemyManager.updateAttack = function(){
                 
                 if (self.attackDelayCounter >= constants.HITDELAY){
                     
-                    if (self.attackTarget === constants.PLAYER){
+                    if (self.attackTargetId in Player.list){
                         playerBody = Player.list[self.attackTargetId];
                         if (Mathfunc.distance(self.body.position,playerBody.body.position) <= constants.HITRADIUS){
                             playerBody.decreaseHealth(constants.ENEMYDAMAGE);
                         }
                     }
 
-                    else if (self.attackTarget === constants.BLOCK){
+                    else if (self.attackTargetId in Block.list){
                         blockBody = Block.list[self.attackTargetId];
                         if (Mathfunc.distance(self.body.position,blockBody.body.position) <= constants.HITRADIUS){
                             blockBody.decreaseHealth(constants.ENEMYDAMAGE);

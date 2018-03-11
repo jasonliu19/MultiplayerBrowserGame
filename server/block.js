@@ -2,43 +2,50 @@ var socketHandler = require('./sockethandler.js');
 var p2 = require('p2');
 var world = require('./physicshandler.js');
 var constants = require('./constants.js');
+var mathfunc = require('./mathfunc.js');
 var BLOCKSIZE = constants.BLOCKSIZE;
 
 var Block = function(x,y,texture){
-    var self = {};
-    self.texture = texture;
-    self.id = Math.random() * 6;
-    self.body = new p2.Body({
-    	position:[x,y],
-    	type: p2.Body.KINEMATIC,
-        id: self.id,
-    });
-    var blockShape = new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE});
-    blockShape.collisionGroup = constants.BLOCK;
-    blockShape.collisionMask = constants.ENEMY | constants.PLAYER | constants.BULLET;
-    self.body.addShape(blockShape);
-    world.addBody(self.body);
+    var key = String(x)+'.'+String(y);
+    if (!(key in Block.occupationList)){
+        var self = {};
+        self.texture = texture;
+        self.id = Math.random() * 6;
+        self.positionKey = key;
+        self.body = new p2.Body({
+        	position:[x,y],
+        	type: p2.Body.KINEMATIC,
+            id: self.id,
+        });
+        var blockShape = new p2.Box({width:BLOCKSIZE, height:BLOCKSIZE});
+        blockShape.collisionGroup = constants.BLOCK;
+        blockShape.collisionMask = constants.ENEMY | constants.PLAYER | constants.BULLET;
+        self.body.addShape(blockShape);
+        world.addBody(self.body);
 
-    self.hp = 500;
+        self.hp = 500;
 
-    self.decreaseHealth = function(damage){
-        var isDead = false;
-        self.hp -= damage;
-        if(self.hp <= 0){
-            Block.destroy(self.id);
-            isDead = true;
+        self.decreaseHealth = function(damage){
+            var isDead = false;
+            self.hp -= damage;
+            if(self.hp <= 0){
+                Block.destroy(self.id);
+                isDead = true;
+            }
+            return isDead;
         }
-        return isDead;
-    }
 
-    Block.list[self.id] = self;
-    Block.count++;
-    return self;
+        Block.list[self.id] = self;
+        Block.count++;
+        Block.occupationList[key];
+        return self;
+    }
 }
 
 
 Block.list = {};
 Block.count = 0;
+Block.occupationList = {};
 
 Block.generateMapData = function(){
 	var pack = {};
@@ -65,10 +72,10 @@ Block.createLine = function(x, y, length, direction, texture){
 Block.initMap = function(){
     // Block.createLine(0, 600, 10, 'right', 'tree');
     // Block.createLine(1000, 0, 10, 'down', 'grass');
-    for(var i = 0; i < 35; i++){
+    while(Block.count < 35){
         //Force block to be created on a grid
-        var randx = Math.floor(Math.random()*constants.WORLDWIDTH/constants.BLOCKSIZE)*constants.BLOCKSIZE;
-        var randy = Math.floor(Math.random()*constants.WORLDHEIGHT/constants.BLOCKSIZE)*constants.BLOCKSIZE;
+        var randx = Math.floor(mathfunc.randomInt(0,constants.WORLDWIDTH)/BLOCKSIZE)*BLOCKSIZE;
+        var randy = Math.floor(mathfunc.randomInt(0,constants.WORLDHEIGHT)/BLOCKSIZE)*BLOCKSIZE;
         Block(randx, randy, 'tree');
     }
 }
@@ -80,10 +87,10 @@ Block.create = function (x,y, texture) {
 
 
 Block.createRandomTrees = function(){
-    for(var i = Block.count; i < 35; i++){
+    while(Block.count < 35){
         //Force block to be created on a grid
-        var randx = Math.floor(Math.random()*constants.WORLDWIDTH/constants.BLOCKSIZE)*constants.BLOCKSIZE;
-        var randy = Math.floor(Math.random()*constants.WORLDHEIGHT/constants.BLOCKSIZE)*constants.BLOCKSIZE;
+        var randx = Math.floor(mathfunc.randomInt(0,constants.WORLDWIDTH)/BLOCKSIZE)*BLOCKSIZE;
+        var randy = Math.floor(mathfunc.randomInt(0,constants.WORLDHEIGHT)/BLOCKSIZE)*BLOCKSIZE;
         Block.create(randx, randy, 'tree');
     }    
 }
@@ -95,6 +102,7 @@ Block.onPlayerConnect = function(socket){
 
 Block.destroy = function (id) {
     world.removeBody(Block.list[id].body);
+    delete Block.occupationList[Block.list[id].positionKey];
     delete Block.list[id];
     Block.count--;
     socketHandler.emitAll('destroyBlock', id);
