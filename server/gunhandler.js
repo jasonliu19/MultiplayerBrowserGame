@@ -6,6 +6,7 @@ var Enemy = require('./enemy.js');
 var Block = require('./block.js');
 var world = require('./physicshandler.js')
 var constants = require('./constants.js');
+var Mathfunc = require('./mathfunc.js');
 
 var GunHandler = {};
 GunHandler.rifleShootRequest = function(angle, position){
@@ -22,10 +23,19 @@ GunHandler.rifleShootRequest = function(angle, position){
     var result = new p2.RaycastResult();
     world.raycast(result, ray);
 
-    // Get the hit point
-    var hitPoint = p2.vec2.create();
-    result.getHitPoint(hitPoint, ray);
-    //console.log('Hit point: ', hitPoint[0], hitPoint[1], ' at distance ' + result.getHitDistance(ray));
+    
+
+    //Avoid ground items
+    while(result.body !== null && result.body.shapes[0].collisionGroup === constants.GROUNDITEM){
+        var remainingLength = distance - Math.abs(result.getHitDistance(ray));
+        // Get the hit point
+        var hitPoint = p2.vec2.create();
+        result.getHitPoint(hitPoint, ray);
+        ray.from = [hitPoint[0] + Math.cos(angle/180*Math.PI)*constants.GROUNDITEMSIZE*1.5, hitPoint[1] + Math.sin(angle/180*Math.PI)*constants.GROUNDITEMSIZE*1.5];
+        console.log('Hit point: ', hitPoint[0], hitPoint[1], ' at distance ' + result.getHitDistance(ray));
+        result.body === 
+        world.raycast(result,ray);
+    }
 
     if(result.body !== null && result.body.shapes[0].collisionGroup === constants.ENEMY){
         if(Enemy.list[result.body.id]){
@@ -137,6 +147,53 @@ GunHandler.sniperShootRequest = function(angle, position){
     return killCount;
 
 }
+
+GunHandler.rifleShootRequestTEST = function(angle, position){
+    var distance = 800;
+    var startx = position[0] + 50*Math.cos(angle/180*Math.PI);
+    var starty = position[1] + 50*Math.sin(angle/180*Math.PI);
+    var closestHitDistance = distance;
+    var closestResult = null;
+    var killedEnemy = false;
+
+    var ray = new p2.Ray({
+        mode: p2.Ray.ALL, // or ANY
+        from: [startx, starty],
+        to: [position[0]+distance*Math.cos(angle/180*Math.PI), position[1]+distance*Math.sin(angle/180*Math.PI)],
+        callback: function(result){
+            // Get the hit point
+            var hitPoint = p2.vec2.create();
+            result.getHitPoint(hitPoint, ray);
+            var length = Math.abs(result.getHitDistance(ray));
+
+            if(result.body !== null && result.body.shapes[0].collisionGroup !== constants.GROUNDITEM && length < closestHitDistance){
+                closestResult = result;
+                closestHitDistance = length;
+            }
+            
+        }
+    });
+
+    var result = new p2.RaycastResult();
+    world.raycast(result, ray);
+
+    socketHandler.emitAll('createGunShot', {startx: startx, starty: starty, angle: angle, length: closestHitDistance});
+    //If enemy
+    if(closestResult !== null && closestResult.body.shapes[0].collisionGroup === constants.ENEMY){
+        if(Enemy.list[closestResult.body.id]){
+            killedEnemy = Enemy.list[closestResult.body.id].decreaseHealth(constants.RIFLEDAMAGE);
+        }
+    }
+    //If block
+    if(closestResult !== null && closestResult.body.shapes[0].collisionGroup === constants.BLOCK){
+        if(Block.list[closestResult.body.id]){
+            Block.list[closestResult.body.id].decreaseHealth(500);
+        }
+    }
+    return killedEnemy;
+
+}
+
 
 // GunHandler.toolUseRequest = function(angle, position){
 //     var distance = 64;
