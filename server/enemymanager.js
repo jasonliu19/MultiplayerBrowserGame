@@ -50,7 +50,7 @@ EnemyManager.updateAttack = function(){
                     else if (self.attackTargetId in Block.list){
                         blockBody = Block.list[self.attackTargetId];
                         if (Mathfunc.distance(self.body.position,blockBody.body.position) <= constants.HITRADIUS){
-                            blockBody.decreaseHealth(constants.ENEMYDAMAGE);
+                            blockBody.decreaseHealth(constants.ENEMYBLOCKDAMAGE);
                         }
                     }
                     //add more else ifs for zombies hitting other things but refactoring and restructuring is heavily recommended

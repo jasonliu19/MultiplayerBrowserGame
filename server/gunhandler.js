@@ -26,16 +26,16 @@ GunHandler.rifleShootRequest = function(angle, position){
     
 
     //Avoid ground items
-    while(result.body !== null && result.body.shapes[0].collisionGroup === constants.GROUNDITEM){
-        var remainingLength = distance - Math.abs(result.getHitDistance(ray));
-        // Get the hit point
-        var hitPoint = p2.vec2.create();
-        result.getHitPoint(hitPoint, ray);
-        ray.from = [hitPoint[0] + Math.cos(angle/180*Math.PI)*constants.GROUNDITEMSIZE*1.5, hitPoint[1] + Math.sin(angle/180*Math.PI)*constants.GROUNDITEMSIZE*1.5];
-        console.log('Hit point: ', hitPoint[0], hitPoint[1], ' at distance ' + result.getHitDistance(ray));
-        result.body === 
-        world.raycast(result,ray);
-    }
+    // while(result.body !== null && result.body.shapes[0].collisionGroup === constants.GROUNDITEM){
+    //     var remainingLength = distance - Math.abs(result.getHitDistance(ray));
+    //     // Get the hit point
+    //     var hitPoint = p2.vec2.create();
+    //     result.getHitPoint(hitPoint, ray);
+    //     ray.from = [hitPoint[0] + Math.cos(angle/180*Math.PI)*constants.GROUNDITEMSIZE*1.5, hitPoint[1] + Math.sin(angle/180*Math.PI)*constants.GROUNDITEMSIZE*1.5];
+    //     console.log('Hit point: ', hitPoint[0], hitPoint[1], ' at distance ' + result.getHitDistance(ray));
+    //     result.body === 
+    //     world.raycast(result,ray);
+    //}
 
     if(result.body !== null && result.body.shapes[0].collisionGroup === constants.ENEMY){
         if(Enemy.list[result.body.id]){
