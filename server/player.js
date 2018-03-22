@@ -43,7 +43,7 @@ var Player = function (id) {
     	position:[250,250],
         id: id,
     });
-    var bodyShape = new p2.Box({width:64, height:64});
+    var bodyShape = new p2.Box({width:50, height:50});
     bodyShape.collisionGroup = constants.PLAYER;
     bodyShape.collisionMask = constants.GROUNDITEM | constants.ENEMY | constants.BLOCK | constants.PLAYER;
     self.body.addShape(bodyShape);
