@@ -25,7 +25,7 @@ var Enemy = function(x, y, playerid){
     });
 
 
-    var enemyshape = new p2.Box({width:constants.BLOCKSIZE, height:constants.BLOCKSIZE});
+    var enemyshape = new p2.Box({width:50, height:50});
     enemyshape.collisionGroup = constants.ENEMY;
     enemyshape.collisionMask = constants.PLAYER | constants.BLOCK | constants.BULLET;
     self.body.addShape(enemyshape);
