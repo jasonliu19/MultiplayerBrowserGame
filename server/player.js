@@ -20,6 +20,9 @@ var Player = function (id) {
     self.damageCooldownCounter = 0;;
     self.hp = 100;
 
+    self.dead = false;
+    self.respawnTimer = 0;
+
     self.equippedItem = 3;
     self.inventory = [null, 'rifle', 'shotgun', 'sniper', 'tool', 'wood'];
     self.cooldowns = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -103,6 +106,10 @@ var Player = function (id) {
     }
 
     self.update = function () {
+        if(self.dead){
+            self.updateRespawnTimer();
+            return;
+        }
         self.updateVel();
         self.worldbounds();
         self.updateDamage();
@@ -114,6 +121,10 @@ var Player = function (id) {
             self.hp -= damage;
             self.justDamaged = true;
         }
+        if(self.hp <= 0){
+            self.die();
+        }
+
     }
 
     self.decreaseAmmo = function(type){
@@ -123,6 +134,36 @@ var Player = function (id) {
     self.destroy = function(){
         world.removeBody(self.body);
         delete Player.list[self.id];
+    }
+
+    self.die = function(){
+        self.dead = true;
+        self.respawnTimer = constants.RESPAWNTIME;
+        self.body.velocity = [0,0];
+        self.body.position = [250, -500];
+        socketHandler.emitAll('playerDeath', self.id);
+    }
+
+    self.updateRespawnTimer = function(){
+        self.respawnTimer--;
+        if(self.respawnTimer <= 0){
+            self.respawn();
+        }
+    }
+
+    self.respawn = function(){
+        self.hp = 100;
+        self.dead = false;
+        self.respawnTimer = 0;
+        self.ammo = {
+            rifle: 50,
+            shotgun: 500,
+            sniper: 500,
+        }
+        self.resources = {
+            wood: 5,
+        }
+        self.body.position = [250, 250];
     }
 
     Player.list[id] = self;
@@ -158,8 +199,16 @@ Player.onConnect = function (socket) {
     });
 }
 
+Player.update = function(){
+    for(var i in Player.list){
+        var player = Player.list[i];
+        player.update();
+    }
+}
+
 Player.handleUseRequest = function(socketid, cursorPosition){
-    if(!(socketid in Player.list))
+    //Ensure player hasn't left and is alive
+    if(!(socketid in Player.list) || Player.list[socketid].dead)
         return;
     var player  = Player.list[socketid];
     var equipped = player.equippedItem;

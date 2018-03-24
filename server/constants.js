@@ -12,6 +12,7 @@ exports.RIFLECOOLDOWN = 8;
 exports.SHOTGUNCOOLDOWN = 20;
 exports.SNIPERCOOLDOWN = 40;
 exports.TOOLCOOLDOWN = 5;
+exports.RESPAWNTIME = 600;
 
 exports.BLOCKSIZE = 64;
 exports.GROUNDITEMSIZE = 16;

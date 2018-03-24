@@ -10,6 +10,9 @@ EnemyManager.updateVelocity = function(){
     for(var id in Enemy.list){
     	try{
 	    	var playerid = Enemy.list[id].playerid;
+            if(Player.list[playerid].dead){
+                Enemy.destroy(id);    
+            }
 	    	var self = Enemy.list[id];
 	        if(Player.list[playerid].body.position[0] > self.body.position[0])
 	            self.body.velocity[0] = self.maxspeed;
@@ -71,6 +74,9 @@ EnemyManager.update = function(command){
 
 EnemyManager.randomGenerateEnemy = function() {    
     for(i in Player.list){ 
+        if(Player.list[i].dead)
+            return;
+
         var spawnSide = Math.floor((Math.random() * 4) + 1);   
         var x = 10;    
         var y = 10;    

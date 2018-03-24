@@ -32,7 +32,7 @@ exports.getLastConnectedSocket = function(){
 }
 
 exports.emitAll = function(emitMessage, data){
-    console.log("Emitall: " + emitMessage);
+    //console.log("Emitall: " + emitMessage);
     for(var i in SOCKET_LIST){
         try {
 

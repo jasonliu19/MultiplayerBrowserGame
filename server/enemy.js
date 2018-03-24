@@ -91,6 +91,10 @@ Enemy.generateCurrentStatusPackage = function(){
 
 Enemy.onPlayerDisconnect = function(socket){
     var playerid = socket.id;
+    Enemy.destroyZombiesTargettingPlayer(playerid);
+}
+
+Enemy.destroyZombiesTargettingPlayer = function(playerid){
     for(var i in Enemy.list){
         if(Enemy.list[i].playerid === playerid){
             Enemy.destroy(i);

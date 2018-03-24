@@ -47,10 +47,7 @@ var waveNumber = 1;
 setInterval(function () {
 	var delta = Date.now() - lastTime;
 	lastTime = Date.now();
-	for(var i in Player.list){
-        var player = Player.list[i];
-        player.update();
-    }
+    Player.update();
     world.step(delta/1000);
 
     // limit time between waves to be 10 seconds at shortest
@@ -112,7 +109,7 @@ setInterval(function () {
 
 setInterval(function () {
 	EnemyManager.update();
-}, 200);
+}, 500);
 
 
 
