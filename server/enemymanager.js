@@ -75,7 +75,7 @@ EnemyManager.update = function(command){
 EnemyManager.randomGenerateEnemy = function() {    
     for(i in Player.list){ 
         if(Player.list[i].dead)
-            return;
+            continue;
 
         var spawnSide = Math.floor((Math.random() * 4) + 1);   
         var x = 10;    

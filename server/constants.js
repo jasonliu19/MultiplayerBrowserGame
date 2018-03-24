@@ -1,5 +1,5 @@
 //Enemy Attack Constants
-exports.ENEMYDAMAGE = 10;
+exports.ENEMYDAMAGE = 25;
 exports.ENEMYBLOCKDAMAGE = 100;
 exports.HITRADIUS = 70;
 exports.HITDELAY = 2;

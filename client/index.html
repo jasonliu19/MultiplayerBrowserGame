@@ -12,11 +12,15 @@
 
     //Initialize phaser game
     var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, 'gameWindow', { preload: preload, create: create, update: update });
+     var layer;
 
     //*Supposed* to resize the window, doesn't work that well
     window.addEventListener('resize', function(){
         game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
-        game.scale.setGameSize(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio);
+        var w = window.innerWidth * window.devicePixelRatio;
+        var h = window.innerHeight * window.devicePixelRatio;
+        game.scale.setGameSize(w, h);
+        // layer.resize(w, h);
         console.log("resize " + window.innerHeight * window.devicePixelRatio);
     });
 
@@ -379,17 +383,16 @@
 
     // Tileset Variables
     var map;
-    var layer;
     var kills;
 
     //Initializes game
     function create() {
+        game.world.setBounds(0, 0, 1920, 1080);
+
         map = game.add.tilemap('map', 64, 64);
         map.addTilesetImage('tiles');
         layer = map.createLayer(0);
-        layer.resizeWorld();
-
-        game.world.setBounds(0, 0, 1920, 1080);
+        //layer.resizeWorld();
         game.time.advancedTiming = true;
         game.stage.disableVisibilityChange = true;
         game.stage.backgroundColor = '#95BCC7';
@@ -428,6 +431,7 @@
             socket.on('createGunShot', GunHandler.createGunShot);
             socket.on('createBlock', Block.create);
             socket.on('destroyBlock', Block.destroy);
+            game.camera.follow(Player.thisPlayer.gameobject, Phaser.Camera.FOLLOW_TOPDOWN, 0.1, 0.1);
             startGame = true;
             game.time.events.loop(100, Player.updateServer, this);
 
