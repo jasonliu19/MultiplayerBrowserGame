@@ -84,6 +84,21 @@ setInterval(function () {
     if(zombieSpawnTimer%500 == 0){
         GroundItem.randomlySpawnAmmo();
     }
+
+    //Check if server is empty
+    var isEmpty = true;
+    for(var i in Player.list) {
+        if (Player.list.hasOwnProperty(i)) {
+           isEmpty = false;
+           break;
+        }
+    }
+
+    if(isEmpty){
+        wavePauseTime = 60000;
+        waveLength = 30000;
+        waveNumber = 1;
+    }
     zombieSpawnTimer++;
 }, 1000/60);
 
