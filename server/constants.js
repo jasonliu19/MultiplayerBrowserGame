@@ -30,4 +30,5 @@ exports.BLOCKSIZE = 64;
 exports.HUMANOIDSIZE = 50;
 exports.GROUNDITEMSIZE = 16;
 exports.DEFAULTBLOCKTEXTURE = 'grass';
+exports.MAXGROUNDITEMS = 15;
 
