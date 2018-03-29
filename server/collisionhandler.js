@@ -63,25 +63,25 @@ world.on("beginContact",function(evt){
             primaryBody = bodiesArray[0];
             otherBody = bodiesArray[1];
 
-            if (otherBody.shapes[0].collisionGroup === constants.GROUNDITEM){
-                try{
-                    //Temporary, only for ammo with fixed quantity
-                    Player.list[primaryBody.id].ammo.rifle += 50;
-                    GroundItem.list[otherBody.id].destroy();
+            // if (otherBody.shapes[0].collisionGroup === constants.GROUNDITEM){
+            //     try{
+            //         //Temporary, only for ammo with fixed quantity
+            //         Player.list[primaryBody.id].ammo.rifle += 50;
+            //         GroundItem.list[otherBody.id].destroy();
 
-                }catch(error){
-                    console.log(error);
-                }
-            }
+            //     }catch(error){
+            //         console.log(error);
+            //     }
+            // }
         }
         //If block
         else if (orStatementHelper(bodyA, bodyB, constants.BLOCK)){
             bodiesArray = bodyAssignment(bodyA, bodyB, constants.BLOCK);
         }
-        //If ground item
-        else if (orStatementHelper(bodyA, bodyB, constants.GROUNDITEM)){
-            bodiesArray = bodyAssignment(bodyA, bodyB, constants.GROUNDITEM);
-        }
+        // //If ground item
+        // else if (orStatementHelper(bodyA, bodyB, constants.GROUNDITEM)){
+        //     bodiesArray = bodyAssignment(bodyA, bodyB, constants.GROUNDITEM);
+        // }
     }
 });
 
@@ -109,3 +109,57 @@ world.on("endContact",function(evt){
         }
     }
 });
+
+var CollisionHandler = {};
+
+
+//p1, p2 are positions of the objects in array form [x,y]
+//s1, s2 are sizes of the objects in array form [x,y]
+CollisionHandler.checkOverlap = function(p1, p2, s1, s2){
+    if(p1[0] + s1[0] < p2[0] - s2[0]){
+        return false
+    }
+    if(p1[0] - s1[0] > p2[0] + s2[0]){
+        return false
+    }
+
+    if(p1[1] + s1[1] < p2[1] - s2[1]){
+        return false
+    }
+
+    if(p1[1] - s1[1] > p2[1] + s2[1]){
+        return false
+    }
+
+    return true;
+}
+
+//O(nm) time where n is # ground items and m is # players
+CollisionHandler.updateGroundItems = function(){
+    for(var i in GroundItem.list){
+        var item = GroundItem.list[i];
+        var itempos = item.position;
+        var itemsize = [constants.GROUNDITEMSIZE, constants.GROUNDITEMSIZE];
+        for(var j in Player.list){
+            var player = Player.list[j];
+            var playerpos = player.body.position;
+            var playersize = [constants.HUMANOIDSIZE, constants.HUMANOIDSIZE];
+            if(CollisionHandler.checkOverlap(playerpos, itempos, playersize, itemsize)){
+                try{
+                    //Temporary, only for ammo with fixed quantity
+                    player.ammo.rifle += 50;
+                    item.destroy();
+
+                }catch(error){
+                    console.log(error);
+                }
+            }
+        }
+    }   
+}
+
+CollisionHandler.update = function(){
+    CollisionHandler.updateGroundItems();
+}
+
+module.exports = CollisionHandler;

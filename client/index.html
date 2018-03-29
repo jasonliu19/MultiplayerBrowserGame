@@ -11,18 +11,18 @@
     var socket;
 
     //Initialize phaser game
-    var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, 'gameWindow', { preload: preload, create: create, update: update });
+    var game = new Phaser.Game("100%", "100%", Phaser.AUTO, '', { preload: preload, create: create, update: update });
      var layer;
 
     //*Supposed* to resize the window, doesn't work that well
-    window.addEventListener('resize', function(){
-        game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
-        var w = window.innerWidth * window.devicePixelRatio;
-        var h = window.innerHeight * window.devicePixelRatio;
-        game.scale.setGameSize(w, h);
-        // layer.resize(w, h);
-        console.log("resize " + window.innerHeight * window.devicePixelRatio);
-    });
+    // window.addEventListener('resize', function(){
+    //     var w = window.innerWidth * window.devicePixelRatio;
+    //     var h = window.innerHeight * window.devicePixelRatio;
+    //     // game.scale.setGameSize(w, h);
+    //     layer.width = w;
+    //     layer.height = h;
+    //     console.log("resize " + window.innerHeight * window.devicePixelRatio);
+    // });
 
 
 
@@ -396,7 +396,7 @@
         game.time.advancedTiming = true;
         game.stage.disableVisibilityChange = true;
         game.stage.backgroundColor = '#95BCC7';
-        
+        game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
         game.physics.startSystem(Phaser.Physics.P2JS);
 
         //Create groups

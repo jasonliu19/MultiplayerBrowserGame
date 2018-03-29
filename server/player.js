@@ -46,7 +46,7 @@ var Player = function (id) {
     	position:[250,250],
         id: id,
     });
-    var bodyShape = new p2.Box({width:50, height:50});
+    var bodyShape = new p2.Box({width:constants.HUMANOIDSIZE, height:constants.HUMANOIDSIZE});
     bodyShape.collisionGroup = constants.PLAYER;
     bodyShape.collisionMask = constants.GROUNDITEM | constants.ENEMY | constants.BLOCK | constants.PLAYER;
     self.body.addShape(bodyShape);
@@ -254,7 +254,7 @@ Player.handleUseRequest = function(socketid, cursorPosition){
 }
 
 Player.handleInventoryChangeRequest = function(socketid, slotNumber){
-    console.log('change request: ' + slotNumber);
+//    console.log('change request: ' + slotNumber);
     if(slotNumber <= 0 || slotNumber > Player.list[socketid].inventory.length-1 || Player.list[socketid].inventory[slotNumber] == null)
         return;
 

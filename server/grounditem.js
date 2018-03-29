@@ -10,19 +10,21 @@ var GroundItem = function(category, type, position, quantity){
 	self.category = category;
 	self.type = type;
 	self.quantity = quantity;
-    self.body = new p2.Body({
-    	type: p2.Body.KINEMATIC,
-    	position:position,
-        id: self.id,
-    });
-    var bodyShape = new p2.Box({width:constants.GROUNDITEMSIZE, height:constants.GROUNDITEMSIZE});
-    bodyShape.collisionGroup = constants.GROUNDITEM;
-    bodyShape.collisionMask = constants.PLAYER;
-    self.body.addShape(bodyShape);
-    world.addBody(self.body);
+	self.position = position;
+	self.hitbox = [constants.GROUNDITEMSIZE, constants.GROUNDITEMSIZE];
+    // self.body = new p2.Body({
+    // 	type: p2.Body.KINEMATIC,
+    // 	position:position,
+    //     id: self.id,
+    // });
+    // var bodyShape = new p2.Box({width:constants.GROUNDITEMSIZE, height:constants.GROUNDITEMSIZE});
+    // bodyShape.collisionGroup = constants.GROUNDITEM;
+    // bodyShape.collisionMask = constants.PLAYER;
+    // self.body.addShape(bodyShape);
+    // world.addBody(self.body);
 
     self.destroy = function(){
-	    world.removeBody(self.body);
+	    // world.removeBody(self.body);
 	    delete GroundItem.list[self.id];
 	    socketHandler.emitAll('destroyGroundItem', self.id);
 	    GroundItem.count--;
@@ -39,7 +41,7 @@ GroundItem.generateCurrentStatusPackage = function(){
 	var pack = {};
 	for(var i in GroundItem.list){
 		pack[i] = {
-			position : GroundItem.list[i].body.position,
+			position : GroundItem.list[i].position,
 			category : GroundItem.list[i].category,
 			type : GroundItem.list[i].type
 		};
@@ -48,12 +50,12 @@ GroundItem.generateCurrentStatusPackage = function(){
 }
 
 GroundItem.randomlySpawnAmmo = function(){
-	if(GroundItem.count > 50)
+	if(GroundItem.count > constants.MAXGROUNDITEMS)
 		return;
 	var randx = Math.random()*constants.WORLDWIDTH;
 	var randy = Math.random()*constants.WORLDHEIGHT;
 	var item = GroundItem('ammo', 'rifleammo', [randx,randy], 50);
-	socketHandler.emitAll('createAmmo', {type: 'rifleammo', position: item.body.position, id: item.id});
+	socketHandler.emitAll('createAmmo', {type: 'rifleammo', position: item.position, id: item.id});
 	GroundItem.count++;
 }
 

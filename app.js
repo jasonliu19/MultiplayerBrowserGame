@@ -9,7 +9,7 @@ var constants = require('./server/constants.js');
 var Block = require('./server/block.js');
 var GroundItem = require('./server/grounditem.js');
 var world = require('./server/physicshandler.js');
-require('./server/collisionhandler.js');
+var CollisionHandler = require('./server/collisionhandler.js');
 
 var SOCKET_LIST = socketHandler.SOCKET_LIST;
 var io = socketHandler.io;
@@ -49,6 +49,7 @@ setInterval(function () {
 	lastTime = Date.now();
     Player.update();
     world.step(delta/1000);
+    CollisionHandler.update();
 
     // limit time between waves to be 10 seconds at shortest
     if(zombieSpawnTimer >= wavePauseTime && wavePauseTime >= 10000) {
@@ -104,12 +105,12 @@ setInterval(function () {
 
 setInterval(function () {
     Block.update();
-}, 2000);
+}, 5000);
 
 
 setInterval(function () {
 	EnemyManager.update();
-}, 500);
+}, 200);
 
 
 
