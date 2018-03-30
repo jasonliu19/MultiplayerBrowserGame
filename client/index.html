@@ -27,7 +27,7 @@
         if(!WindowManager.resizeNeeded)
             return;
         WindowManager.ticksSinceEvent++;
-        if(WindowManager.ticksSinceEvent < 5)
+        if(WindowManager.ticksSinceEvent < 10)
             return;
 
         WindowManager.ticksSinceEvent = 0
@@ -41,12 +41,47 @@
         game.scale.setGameSize(w, h);
         layer.resize(w,h);
         game.camera.follow(Player.thisPlayer.gameobject, Phaser.Camera.FOLLOW_TOPDOWN, 0.1, 0.1);
+        WindowManager.createUI();
         // layer.resizeWorld();
         console.log("resize " + window.innerHeight * window.devicePixelRatio);
     }
 
     WindowManager.resizeNeeded = false;
     WindowManager.ticksSinceEvent = 0;
+
+    WindowManager.inventoryPanel;
+    WindowManager.statPanel;
+
+    WindowManager.createUI = function(){
+        try{
+            WindowManager.inventoryPanel.destroy();
+        } catch(e){}
+        //Inventory Panel
+        var sizex = Math.min(64*9, game.width*3/5);
+        var sizey = sizex/9;//Math.max(64, sizex/6);
+        var x = (game.width - sizex)/2
+        var y = game.height - 2*sizey;
+        WindowManager.inventoryPanel = new SlickUI.Element.Panel(x,y,sizex,sizey)
+        slickUI.add(WindowManager.inventoryPanel);
+        WindowManager.inventoryPanel.alpha = 0.85;
+
+        //Stat panel
+        sizex = Math.min(64*3);
+        sizey = 120;
+        x = 16
+        y = 16
+        WindowManager.statPanel = new SlickUI.Element.Panel(x,y,sizex,sizey)
+        slickUI.add(WindowManager.statPanel);
+        WindowManager.statPanel.alpha = 1;
+        hp = new SlickUI.Element.Text(8,4, 'HP: 100', 24); 
+        ammo = new SlickUI.Element.Text(8,32, 'Ammo: 100', 24); 
+        kills = new SlickUI.Element.Text(8,60, 'KIlls: 0', 24);
+        fps = new SlickUI.Element.Text(8,94, 'FPS: 0', 10);  
+        WindowManager.statPanel.add(hp);
+        WindowManager.statPanel.add(ammo);
+        WindowManager.statPanel.add(kills);
+        WindowManager.statPanel.add(fps);
+    }
 
 
     //Keeps track of inputs
@@ -280,7 +315,7 @@
     var Block = function(texture, position, id){
         var self = {};
         self.id = id;
-        self.gameobject = game.add.sprite(position[0], position[1], texture);
+        self.gameobject = Block.group.create(position[0], position[1], texture);
         self.gameobject.anchor.x = 0.5;
         self.gameobject.anchor.y = 0.5;
         Block.list[id] = self;
@@ -288,6 +323,7 @@
     }
 
     Block.list = {};
+    Block.group;
     
     Block.makeMap = function(mapData){
         for(var i in mapData) {
@@ -308,7 +344,8 @@
     //VERY INEFFICIENT, consider using a single graphics to draw everything even if there is desync
     var LineDrawer = function(){
         var self={};
-        self.graphics = game.add.graphics(0,0);
+        self.graphics = game.make.graphics(0,0);
+        LineDrawer.group.add(self.graphics);
         self.graphics.lineStyle(2, 0xffd900, 1);
         self.graphics.endFill();
         self.timeAlive = 0;
@@ -327,6 +364,7 @@
     }
 
     LineDrawer.list = {};
+    LineDrawer.group;
     LineDrawer.updateAll = function(){
         for(var i in LineDrawer.list){
             LineDrawer.list[i].update();
@@ -398,10 +436,10 @@
 
         game.load.image('zombie', '/assets/zombie.png')
         slickUI = game.plugins.add(Phaser.Plugin.SlickUI);
-        //slickUI.load('/assets/UI/kenney.json');
+        slickUI.load('/assets/UI/kenney.json');
     }
     
-    var scoreText;
+    var fps;
     var hp;
     var ammo;
     var startGame =false;
@@ -429,13 +467,11 @@
         GroundItem.group = game.add.group();
         Enemy.group = game.add.group();
         Player.group = game.add.group();
+        LineDrawer.group = game.add.group();
+        Block.group = game.add.group();
 
-        scoreText = game.add.text(16, 16, 'FPS: ', { fontSize: '32px', fill: '#000' });
 
-        hp = game.add.text(16, 45, 'Ammo: ', { fontSize: '32px', fill: '#000' });
-
-        ammo = game.add.text(16, 74, 'Ammo: ', { fontSize: '32px', fill: '#000' });
-        kills = game.add.text(16, 103, 'Kills: ', { fontSize: '32px', fill: '#000' });
+        WindowManager.createUI();
 
         socket = io();
         socket.on('connect', function() {
@@ -510,18 +546,21 @@
         if(startGame){
             WindowManager.update();
             LineDrawer.updateAll();
-            scoreText.text = 'FPS: ' + game.time.fps;
-            hp.text = 'HP: ' + Player.thisPlayer.hp;
-            if(Player.thisPlayer.equipped === 1) {
-                ammo.text = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
-            }
-            else if(Player.thisPlayer.equipped === 2) {
-                ammo.text = 'Ammo: ' + Player.thisPlayer.ammo.shotgun;
-            }
-            else if(Player.thisPlayer.equipped === 3) {
-                ammo.text = 'Ammo: ' + Player.thisPlayer.ammo.sniper;
-            }
-            kills.text = 'Kills: ' + Player.thisPlayer.killCount;
+            fps.value = 'FPS: ' + game.time.fps;
+            try{
+                hp.value = 'Health: ' + Player.thisPlayer.hp;
+                if(Player.thisPlayer.equipped === 1) {
+                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
+                }
+                else if(Player.thisPlayer.equipped === 2) {
+                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.shotgun;
+                }
+                else if(Player.thisPlayer.equipped === 3) {
+                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.sniper;
+                }
+                kills.value = 'Kills: ' + Player.thisPlayer.killCount;
+            } catch (e){} 
+
             Player.updateAllPositons();
             Player.updateAllRotations();
             //Bullet.destroyOldBullets();
