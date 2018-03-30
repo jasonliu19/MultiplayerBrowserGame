@@ -4,6 +4,7 @@
 </body>
 <script src="//cdn.jsdelivr.net/phaser/2.6.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
+<script src ="/client/slick-ui.min.js"></script>
 <script>
 
 
@@ -13,10 +14,12 @@
     //Initialize phaser game
     var game = new Phaser.Game("100%", "100%", Phaser.AUTO, '', { preload: preload, create: create, update: update });
     var layer;
+    var slickUI;
 
     //Handle window resize events
     window.addEventListener('resize', function(){
         WindowManager.resizeNeeded = true;
+        WindowManager.ticksSinceEvent = 0;
     });
 
     var WindowManager = {}; 
@@ -37,6 +40,7 @@
         var h = window.innerHeight * window.devicePixelRatio;
         game.scale.setGameSize(w, h);
         layer.resize(w,h);
+        game.camera.follow(Player.thisPlayer.gameobject, Phaser.Camera.FOLLOW_TOPDOWN, 0.1, 0.1);
         // layer.resizeWorld();
         console.log("resize " + window.innerHeight * window.devicePixelRatio);
     }
@@ -393,6 +397,8 @@
         this.load.image('tiles', '/assets/Maps/wood_tileset.png');
 
         game.load.image('zombie', '/assets/zombie.png')
+        slickUI = game.plugins.add(Phaser.Plugin.SlickUI);
+        //slickUI.load('/assets/UI/kenney.json');
     }
     
     var scoreText;
