@@ -1,12 +1,25 @@
 <body style = "padding:0px; margin:0px">
     <div id = "gameWindow">
     </div>
+    <div id = "inventoryBG"></div>
 </body>
 <script src="//cdn.jsdelivr.net/phaser/2.6.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script src ="/client/slick-ui.min.js"></script>
-<script>
+<link rel="stylesheet" type="text/css" href="/client/style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<!-- <script>
+var resizeUI = function() {
 
+
+}
+
+$(document).ready(resizeUI());
+
+$(window).resize(resizeUI());
+</script>
+ -->
+<script>
 
     //Socket instance, initialized in create()
     var socket;
@@ -27,7 +40,7 @@
         if(!WindowManager.resizeNeeded)
             return;
         WindowManager.ticksSinceEvent++;
-        if(WindowManager.ticksSinceEvent < 10)
+        if(WindowManager.ticksSinceEvent < 15)
             return;
 
         WindowManager.ticksSinceEvent = 0
@@ -41,7 +54,7 @@
         game.scale.setGameSize(w, h);
         layer.resize(w,h);
         game.camera.follow(Player.thisPlayer.gameobject, Phaser.Camera.FOLLOW_TOPDOWN, 0.1, 0.1);
-        WindowManager.createUI();
+        WindowManager.resizeUI();
         // layer.resizeWorld();
         console.log("resize " + window.innerHeight * window.devicePixelRatio);
     }
@@ -50,20 +63,34 @@
     WindowManager.ticksSinceEvent = 0;
 
     WindowManager.inventoryPanel;
-    WindowManager.statPanel;
+    WindowManager.inventorySlotPanels = [];
+    WindowManager.statPanel = null;
 
     WindowManager.createUI = function(){
-        try{
-            WindowManager.inventoryPanel.destroy();
-        } catch(e){}
+        // try{
+        //     WindowManager.inventoryPanel.destroy();
+        //     for(var i = 1; i < WindowManager.inventorySlotPanels.length; i++){
+        //         WindowManager.inventorySlotPanels[i].destroy();
+        //     }
+        //     WindowManager.inventorySlotPanels = [];
+        // } catch(e){
+        //     console.log("Failed to destroy");
+        // }
+
         //Inventory Panel
-        var sizex = Math.min(64*9, game.width*3/5);
-        var sizey = sizex/9;//Math.max(64, sizex/6);
-        var x = (game.width - sizex)/2
-        var y = game.height - 2*sizey;
-        WindowManager.inventoryPanel = new SlickUI.Element.Panel(x,y,sizex,sizey)
-        slickUI.add(WindowManager.inventoryPanel);
-        WindowManager.inventoryPanel.alpha = 0.85;
+        WindowManager.resizeUI();
+
+        //Account for one off error (inventory starts at 1)
+        // WindowManager.inventorySlotPanels.push(null);
+        // for(var i = 0; i < 9; i++){
+        //     var slotIcon = game.make.sprite(0, 0, 'shotgunIcon');
+        //     slotIcon.scale.setTo(sizey/400, sizey/400);
+        //     WindowManager.inventorySlotPanels.push(new SlickUI.Element.Panel(x + i*sizey,y, sizey ,sizey));
+        //     slickUI.add(WindowManager.inventorySlotPanels[i+1]);
+        //     WindowManager.inventorySlotPanels[i+1].add(new SlickUI.Element.DisplayObject(0, 0, slotIcon));
+        //     WindowManager.inventorySlotPanels[i+1].add(new SlickUI.Element.Text(4, 4, i+1));
+        //     WindowManager.inventorySlotPanels[i+1].alpha = 0.5;
+        // }
 
         //Stat panel
         sizex = Math.min(64*3);
@@ -72,15 +99,25 @@
         y = 16
         WindowManager.statPanel = new SlickUI.Element.Panel(x,y,sizex,sizey)
         slickUI.add(WindowManager.statPanel);
-        WindowManager.statPanel.alpha = 1;
-        hp = new SlickUI.Element.Text(8,4, 'HP: 100', 24); 
-        ammo = new SlickUI.Element.Text(8,32, 'Ammo: 100', 24); 
-        kills = new SlickUI.Element.Text(8,60, 'KIlls: 0', 24);
-        fps = new SlickUI.Element.Text(8,94, 'FPS: 0', 10);  
-        WindowManager.statPanel.add(hp);
-        WindowManager.statPanel.add(ammo);
-        WindowManager.statPanel.add(kills);
-        WindowManager.statPanel.add(fps);
+        WindowManager.statPanel.alpha = 0.8;
+        hp = new SlickUI.Element.Text(16+8,16+4, 'HP: 100', 24); 
+        ammo = new SlickUI.Element.Text(16+8,16+32, 'Ammo: 100', 24); 
+        kills = new SlickUI.Element.Text(16+8,16+60, 'KIlls: 0', 24);
+        fps = new SlickUI.Element.Text(16+8,16+94, 'FPS: 0', 10);  
+        slickUI.add(hp);
+        slickUI.add(ammo);
+        slickUI.add(kills);
+        slickUI.add(fps);
+    }
+
+    WindowManager.resizeUI = function(){
+        var w = window.innerWidth * window.devicePixelRatio;
+        var h = window.innerHeight * window.devicePixelRatio;
+        var invWidth =  $("#inventoryBG").width();
+        console.log(invWidth);
+        var invHeight = invWidth/9;
+        $("#inventoryBG").height(invHeight);
+        $("#inventoryBG").css({left: (w-invWidth)/2, top: h - invHeight*2});
     }
 
 
@@ -374,7 +411,10 @@
     var GunHandler = {};
 
     GunHandler.useRequest = function(){
-        socket.emit('useRequest', [game.input.mousePointer.x, game.input.mousePointer.y]);
+        //Check if over UI
+        var x = game.input.mousePointer.x;
+        var y = game.input.mousePointer.y;
+        socket.emit('useRequest', [x,y]);
     }
 
     GunHandler.createGunShot = function(data){
@@ -418,6 +458,23 @@
         delete GroundItem.list[id];
     }
 
+
+    var InputManager = {};
+    InputManager.sendCooldown = 0;
+
+    InputManager.update = function(){
+        InputManager.updateMouseDown();
+    }
+
+    InputManager.updateMouseDown = function(){
+        if(game.input.activePointer.leftButton.isDown){
+            InputManager.sendCooldown--;
+            if(InputManager.sendCooldown <= 0){
+                InputManager.sendCooldown = 10;
+                GunHandler.useRequest();
+            }
+        }
+    }
     //Main phaser functions
 
     //Loads assets
@@ -428,7 +485,9 @@
         game.load.image('wood', '/assets/wood.png');
         game.load.image('grass', '/assets/grass.png');
         game.load.image('tree', '/assets/tree.png');
-        game.load.image('rifleammo', '/assets/rifleammo.png');        
+        game.load.image('rifleammo', '/assets/rifleammo.png');
+        game.load.image('sniperIcon', '/assets/tree.png');
+        game.load.image('shotgunIcon', '/assets/shotgunrotated.png');        
 
         // LOADING TILESET ASSETS
         this.load.tilemap('map', '/assets/Maps/map.csv');
@@ -461,7 +520,8 @@
         game.stage.backgroundColor = '#95BCC7';
         game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
         game.physics.startSystem(Phaser.Physics.P2JS);
-
+        game.input.mouse.capture = true;
+        
         //Create groups
 
         GroundItem.group = game.add.group();
@@ -533,11 +593,6 @@
                 Player.updateServer();
             }
 
-            document.onmousedown = function(){
-                GunHandler.useRequest();
-            }
-
-
         });
     }
     
@@ -546,20 +601,21 @@
         if(startGame){
             WindowManager.update();
             LineDrawer.updateAll();
-            fps.value = 'FPS: ' + game.time.fps;
-            try{
-                hp.value = 'Health: ' + Player.thisPlayer.hp;
-                if(Player.thisPlayer.equipped === 1) {
-                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
-                }
-                else if(Player.thisPlayer.equipped === 2) {
-                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.shotgun;
-                }
-                else if(Player.thisPlayer.equipped === 3) {
-                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.sniper;
-                }
-                kills.value = 'Kills: ' + Player.thisPlayer.killCount;
-            } catch (e){} 
+            InputManager.update();
+            // fps.value = 'FPS: ' + game.time.fps;
+            // try{
+            //     hp.value = 'Health: ' + Player.thisPlayer.hp;
+            //     if(Player.thisPlayer.equipped === 1) {
+            //         ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
+            //     }
+            //     else if(Player.thisPlayer.equipped === 2) {
+            //         ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.shotgun;
+            //     }
+            //     else if(Player.thisPlayer.equipped === 3) {
+            //         ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.sniper;
+            //     }
+            //     kills.value = 'Kills: ' + Player.thisPlayer.killCount;
+            // } catch (e){} 
 
             Player.updateAllPositons();
             Player.updateAllRotations();
