@@ -2,7 +2,7 @@
     <div id = "gameWindow">
     </div>
 </body>
-<script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
+<script src="//cdn.jsdelivr.net/phaser/2.6.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script>
 
@@ -12,18 +12,37 @@
 
     //Initialize phaser game
     var game = new Phaser.Game("100%", "100%", Phaser.AUTO, '', { preload: preload, create: create, update: update });
-     var layer;
+    var layer;
 
-    //*Supposed* to resize the window, doesn't work that well
-    // window.addEventListener('resize', function(){
-    //     var w = window.innerWidth * window.devicePixelRatio;
-    //     var h = window.innerHeight * window.devicePixelRatio;
-    //     // game.scale.setGameSize(w, h);
-    //     layer.width = w;
-    //     layer.height = h;
-    //     console.log("resize " + window.innerHeight * window.devicePixelRatio);
-    // });
+    //Handle window resize events
+    window.addEventListener('resize', function(){
+        WindowManager.resizeNeeded = true;
+    });
 
+    var WindowManager = {}; 
+    WindowManager.update = function(){
+        if(!WindowManager.resizeNeeded)
+            return;
+        WindowManager.ticksSinceEvent++;
+        if(WindowManager.ticksSinceEvent < 5)
+            return;
+
+        WindowManager.ticksSinceEvent = 0
+        WindowManager.resizeNeeded = false;
+        WindowManager.resizeGameWindow();
+    }
+
+    WindowManager.resizeGameWindow = function(){
+        var w = window.innerWidth * window.devicePixelRatio;
+        var h = window.innerHeight * window.devicePixelRatio;
+        game.scale.setGameSize(w, h);
+        layer.resize(w,h);
+        // layer.resizeWorld();
+        console.log("resize " + window.innerHeight * window.devicePixelRatio);
+    }
+
+    WindowManager.resizeNeeded = false;
+    WindowManager.ticksSinceEvent = 0;
 
 
     //Keeps track of inputs
@@ -392,11 +411,11 @@
         map = game.add.tilemap('map', 64, 64);
         map.addTilesetImage('tiles');
         layer = map.createLayer(0);
-        //layer.resizeWorld();
+        layer.resizeWorld();
         game.time.advancedTiming = true;
         game.stage.disableVisibilityChange = true;
         game.stage.backgroundColor = '#95BCC7';
-        game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+        game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
         game.physics.startSystem(Phaser.Physics.P2JS);
 
         //Create groups
@@ -480,10 +499,10 @@
         });
     }
     
-
     //Main render loop
     function update(){
         if(startGame){
+            WindowManager.update();
             LineDrawer.updateAll();
             scoreText.text = 'FPS: ' + game.time.fps;
             hp.text = 'HP: ' + Player.thisPlayer.hp;

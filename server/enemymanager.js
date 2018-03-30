@@ -28,7 +28,7 @@ EnemyManager.updateVelocity = function(){
 	        else
 	            self.body.velocity[1] = 0;
 	    } catch (error){
-	    	console.log(error);
+	    	console.log("Player or enemy was destroyed");
 	    }
 	}
 }
