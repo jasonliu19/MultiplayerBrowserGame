@@ -24,7 +24,7 @@ var Player = function (id) {
     self.respawnTimer = 0;
 
     self.equippedItem = 3;
-    self.inventory = [null, 'rifle', 'shotgun', 'sniper', 'tool', 'wood'];
+    self.inventory = [null, 'rifle', 'shotgun', 'sniper', 'tool', 'wood', null, null, null, null];
     self.cooldowns = [0, 0, 0, 0, 0, 0, 0, 0];
 
     self.ammo = {

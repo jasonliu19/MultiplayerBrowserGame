@@ -1,24 +1,23 @@
 <body style = "padding:0px; margin:0px">
     <div id = "gameWindow">
     </div>
-    <div id = "inventoryBG"></div>
+<!--     <div id = "inventoryBG"> -->
+    </div>
+    <div class = "inventorySlot" id = "inv1"><p>1<p></div>
+    <div class = "inventorySlot" id = "inv2"><p>2<p><img src="/assets/shotgunrotated.png" class="invIcon"></div>
+    <div class = "inventorySlot" id = "inv3"><p>3<p><img src="/assets/sniper.png" class="invIcon"></div>
+    <div class = "inventorySlot" id = "inv4"><p>4<p></div>
+    <div class = "inventorySlot" id = "inv5"><p>5<p></div>
+    <div class = "inventorySlot" id = "inv6"><p>6<p></div>
+    <div class = "inventorySlot" id = "inv7"><p>7<p></div>
+    <div class = "inventorySlot" id = "inv8"><p>8<p></div>
+    <div class = "inventorySlot" id = "inv9"><p>9<p></div>
 </body>
 <script src="//cdn.jsdelivr.net/phaser/2.6.2/phaser.min.js"></script>
 <script src = "/socket.io/socket.io.js"></script>
 <script src ="/client/slick-ui.min.js"></script>
 <link rel="stylesheet" type="text/css" href="/client/style.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<!-- <script>
-var resizeUI = function() {
-
-
-}
-
-$(document).ready(resizeUI());
-
-$(window).resize(resizeUI());
-</script>
- -->
 <script>
 
     //Socket instance, initialized in create()
@@ -62,35 +61,13 @@ $(window).resize(resizeUI());
     WindowManager.resizeNeeded = false;
     WindowManager.ticksSinceEvent = 0;
 
-    WindowManager.inventoryPanel;
-    WindowManager.inventorySlotPanels = [];
+    WindowManager.selectedSlot = 1;
     WindowManager.statPanel = null;
 
     WindowManager.createUI = function(){
-        // try{
-        //     WindowManager.inventoryPanel.destroy();
-        //     for(var i = 1; i < WindowManager.inventorySlotPanels.length; i++){
-        //         WindowManager.inventorySlotPanels[i].destroy();
-        //     }
-        //     WindowManager.inventorySlotPanels = [];
-        // } catch(e){
-        //     console.log("Failed to destroy");
-        // }
 
         //Inventory Panel
         WindowManager.resizeUI();
-
-        //Account for one off error (inventory starts at 1)
-        // WindowManager.inventorySlotPanels.push(null);
-        // for(var i = 0; i < 9; i++){
-        //     var slotIcon = game.make.sprite(0, 0, 'shotgunIcon');
-        //     slotIcon.scale.setTo(sizey/400, sizey/400);
-        //     WindowManager.inventorySlotPanels.push(new SlickUI.Element.Panel(x + i*sizey,y, sizey ,sizey));
-        //     slickUI.add(WindowManager.inventorySlotPanels[i+1]);
-        //     WindowManager.inventorySlotPanels[i+1].add(new SlickUI.Element.DisplayObject(0, 0, slotIcon));
-        //     WindowManager.inventorySlotPanels[i+1].add(new SlickUI.Element.Text(4, 4, i+1));
-        //     WindowManager.inventorySlotPanels[i+1].alpha = 0.5;
-        // }
 
         //Stat panel
         sizex = Math.min(64*3);
@@ -113,11 +90,31 @@ $(window).resize(resizeUI());
     WindowManager.resizeUI = function(){
         var w = window.innerWidth * window.devicePixelRatio;
         var h = window.innerHeight * window.devicePixelRatio;
-        var invWidth =  $("#inventoryBG").width();
-        console.log(invWidth);
-        var invHeight = invWidth/9;
-        $("#inventoryBG").height(invHeight);
-        $("#inventoryBG").css({left: (w-invWidth)/2, top: h - invHeight*2});
+        var invHeight =  Math.min(64, (w * 0.6)/9);
+        var invWidth = invHeight*9 + 5*8;
+        // console.log(invWidth);
+        // var invHeight = invWidth/9;
+        // $("#inventoryBG").height(invHeight);
+        // $("#inventoryBG").css({left: (w-invWidth)/2, top: h - invHeight*2});
+
+        for(var i = 1; i <= 9; i++){
+            var curSlot = '#inv' + i;
+            $(curSlot).height(invHeight);
+            $(curSlot).width(invHeight);
+            $(curSlot).css({left: (w-invWidth)/2 +  (i-1)*(5+invHeight), top: h - invHeight*2});
+        }
+
+        $('.invIcon').height(invHeight-2);
+        $('.invIcon').width(invHeight-2);
+
+    }
+
+    WindowManager.updateEquippedSlot = function(slot){
+        var oldSlot = '#inv' + WindowManager.selectedSlot;
+        var newSlot = '#inv' + slot;
+        WindowManager.selectedSlot = slot;
+        $(oldSlot).css('opacity', '0.5');
+        $(newSlot).css('opacity', '1');
     }
 
 
@@ -223,6 +220,7 @@ $(window).resize(resizeUI());
         for (var id in data){
             Player.list[id].equipped = data[id].equipped; 
         }
+        WindowManager.updateEquippedSlot(Player.thisPlayer.equipped);
     }
 
     Player.updateAllTargetPositions = function(data){
@@ -571,7 +569,7 @@ $(window).resize(resizeUI());
                 else if(ev.keyCode === 87){ //w
                     Inputs.up = true;
                 }
-                else if (ev.keyCode >=49 && ev.keyCode <=53){ //1-5
+                else if (ev.keyCode >=49 && ev.keyCode <=57){ //1-9
                     Player.inventoryChangeRequest(ev.keyCode-48); //Adjusting to 1-5
                 }
                 Player.updateServer();
@@ -602,20 +600,20 @@ $(window).resize(resizeUI());
             WindowManager.update();
             LineDrawer.updateAll();
             InputManager.update();
-            // fps.value = 'FPS: ' + game.time.fps;
-            // try{
-            //     hp.value = 'Health: ' + Player.thisPlayer.hp;
-            //     if(Player.thisPlayer.equipped === 1) {
-            //         ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
-            //     }
-            //     else if(Player.thisPlayer.equipped === 2) {
-            //         ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.shotgun;
-            //     }
-            //     else if(Player.thisPlayer.equipped === 3) {
-            //         ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.sniper;
-            //     }
-            //     kills.value = 'Kills: ' + Player.thisPlayer.killCount;
-            // } catch (e){} 
+            fps.value = 'FPS: ' + game.time.fps;
+            try{
+                hp.value = 'Health: ' + Player.thisPlayer.hp;
+                if(Player.thisPlayer.equipped === 1) {
+                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
+                }
+                else if(Player.thisPlayer.equipped === 2) {
+                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.shotgun;
+                }
+                else if(Player.thisPlayer.equipped === 3) {
+                    ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.sniper;
+                }
+                kills.value = 'Kills: ' + Player.thisPlayer.killCount;
+            } catch (e){} 
 
             Player.updateAllPositons();
             Player.updateAllRotations();
