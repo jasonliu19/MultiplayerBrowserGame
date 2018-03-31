@@ -3,6 +3,7 @@
     </div>
 <!--     <div id = "inventoryBG"> -->
     </div>
+    <div id = "youdied"><h1>You Died</h1><p></p></div>
     <div id = "hpbg"><div id = "hp"></div></div>
     <div class = "inventorySlot" id = "inv1"><p>1<p><img src="/assets/akiconrotated.png" class="invIcon"></div>
     <div class = "inventorySlot" id = "inv2"><p>2<p><img src="/assets/shotgunrotated.png" class="invIcon"></div>
@@ -68,9 +69,13 @@
     WindowManager.healthbar = null;
     WindowManager.healthbarbg = null;
 
+    WindowManager.deathmessage = null;
+
     WindowManager.createUI = function(){
         WindowManager.healthbar = $("#hp");
         WindowManager.healthbarbg = $("#hpbg");
+
+        WindowManager.deathmessage = $("#youdied");
         //Inventory Panel
         WindowManager.resizeUI();
 
@@ -110,11 +115,15 @@
         $('.invIcon').width(invHeight-2);
 
         //Health bar
-        WindowManager.healthbar.height(invHeight*0.6);
-        WindowManager.healthbarbg.height(invHeight*0.6+4);
+        WindowManager.healthbar.height(invHeight*0.4);
+        WindowManager.healthbarbg.height(invHeight*0.4+4);
         WindowManager.healthbar.width(invWidth-4);
         WindowManager.healthbarbg.width(invWidth);
-        WindowManager.healthbarbg.css({left: (w-invWidth)/2, top: h - invHeight*3});
+        WindowManager.healthbarbg.css({left: (w-invWidth)/2, top: h - invHeight*2.75});
+
+        WindowManager.deathmessage.height(invHeight*2.5);
+        WindowManager.deathmessage.width(invWidth);
+        WindowManager.deathmessage.css({left: (w-invWidth)/2});
 
     }
 
@@ -127,7 +136,7 @@
     }
 
     WindowManager.updateHealthBar = function(){
-        var width = WindowManager.healthbarbg.width();
+        var width = WindowManager.healthbarbg.width()-4;
         WindowManager.healthbar.width(width*Player.thisPlayer.hp/100.0);
     }
 

@@ -6,6 +6,24 @@ body{
 	-o-user-select: none;
 }
 
+#youdied{
+	border: 2px solid #000000;
+	border-radius: 8px;
+	background-color: #e5e4e0;
+	opacity: 0.8;
+	position: absolute;
+	width: 40%;
+	height: 15%;
+	z-index: 2;
+	left: 20%;
+	top: 20%;
+	display: none;
+}
+
+#youdied p{
+	
+}
+
 #hp{
 	background-color: red;
 	opacity: 1;
