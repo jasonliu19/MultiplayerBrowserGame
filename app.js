@@ -52,53 +52,55 @@ setInterval(function () {
     CollisionHandler.update();
 
     // limit time between waves to be 10 seconds at shortest
-    if(zombieSpawnTimer >= wavePauseTime && wavePauseTime >= 10000) {
+    // if(zombieSpawnTimer >= wavePauseTime && wavePauseTime >= 10000) {
+    //     zombieSpawnTimer = 0;
+    //     waveLength += 3000;
+    //     waveNumber++;
+    //     // spawn waveNumber extra enemies at the beginning of each wave
+    //     for(i = 0; i < waveNumber; i++) {
+    //         for(j = 0; j < waveNumber; j++) {
+    //             EnemyManager.randomGenerateEnemy();
+    //         }
+    //     }
+    // }
+    // else if(zombieSpawnTimer >= wavePauseTime) {
+    //     // spawn waveNumber extra enemies at the beginning of each wave
+    //     for(i = 0; i < waveNumber; i++) {
+    //         for(j = 0; j < waveNumber; j++) {
+    //             EnemyManager.randomGenerateEnemy();
+    //         }
+    //     }
+    //     zombieSpawnTimer = 0;
+    //     wavePauseTime -= 3000;
+    //     waveLength += 3000;
+    //     waveNumber++;
+    // }
+    if(zombieSpawnTimer >= 45){// && zombieSpawnTimer <= waveLength){
         zombieSpawnTimer = 0;
-        waveLength += 3000;
-        waveNumber++;
-        // spawn waveNumber extra enemies at the beginning of each wave
-        for(i = 0; i < waveNumber; i++) {
-            for(j = 0; j < waveNumber; j++) {
-                EnemyManager.randomGenerateEnemy();
-            }
-        }
-    }
-    else if(zombieSpawnTimer >= wavePauseTime) {
-        // spawn waveNumber extra enemies at the beginning of each wave
-        for(i = 0; i < waveNumber; i++) {
-            for(j = 0; j < waveNumber; j++) {
-                EnemyManager.randomGenerateEnemy();
-            }
-        }
-        zombieSpawnTimer = 0;
-        wavePauseTime -= 3000;
-        waveLength += 3000;
-        waveNumber++;
-    }
-    else if(zombieSpawnTimer%100 == 0 && zombieSpawnTimer <= waveLength){
         EnemyManager.randomGenerateEnemy();
-    }
-    if(zombieSpawnTimer == 0){
-        EnemyManager.randomGenerateEnemy();
-    }
-    if(zombieSpawnTimer%500 == 0){
         GroundItem.randomlySpawnAmmo();
     }
+    // if(zombieSpawnTimer == 0){
+    //     EnemyManager.randomGenerateEnemy();
+    // }
+    // if(zombieSpawnTimer%500 == 0){
+    //     GroundItem.randomlySpawnAmmo();
+    // }
 
     //Check if server is empty
-    var isEmpty = true;
-    for(var i in Player.list) {
-        if (Player.list.hasOwnProperty(i)) {
-           isEmpty = false;
-           break;
-        }
-    }
+    // var isEmpty = true;
+    // for(var i in Player.list) {
+    //     if (Player.list.hasOwnProperty(i)) {
+    //        isEmpty = false;
+    //        break;
+    //     }
+    // }
 
-    if(isEmpty){
-        wavePauseTime = 60000;
-        waveLength = 30000;
-        waveNumber = 1;
-    }
+    // if(isEmpty){
+    //     wavePauseTime = 60000;
+    //     waveLength = 30000;
+    //     waveNumber = 1;
+    // }
     zombieSpawnTimer++;
 }, 1000/60);
 

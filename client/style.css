@@ -1,13 +1,29 @@
-#inventoryBG{
-	background-color: #d8c5a0;
-	border: 2px solid #d8c5a0;
+body{
+	user-select: none;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-o-user-select: none;
+}
+
+#hp{
+	background-color: red;
+	opacity: 1;
+	position: absolute;
+	z-index: 3;
+	padding: 0px;
+	margin: 0px;
+	left: 2px;
+	top: 2px;
+}
+
+#hpbg{
+	background-color: #e5e4e0;
+	border: 2px solid black;
 	border-radius: 8px;
-	opacity: 0.5;
+	opacity: 1;
 	position: absolute;
 	z-index: 2;
-	width: 60%;
-	max-width: 576px;
-	max-height: 64px;
 }
 
 #gameWindow{

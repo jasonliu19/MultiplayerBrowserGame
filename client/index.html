@@ -3,6 +3,7 @@
     </div>
 <!--     <div id = "inventoryBG"> -->
     </div>
+    <div id = "hpbg"><div id = "hp"></div></div>
     <div class = "inventorySlot" id = "inv1"><p>1<p><img src="/assets/akiconrotated.png" class="invIcon"></div>
     <div class = "inventorySlot" id = "inv2"><p>2<p><img src="/assets/shotgunrotated.png" class="invIcon"></div>
     <div class = "inventorySlot" id = "inv3"><p>3<p><img src="/assets/sniper.png" class="invIcon"></div>
@@ -36,6 +37,7 @@
 
     var WindowManager = {}; 
     WindowManager.update = function(){
+        WindowManager.updateHealthBar();
         if(!WindowManager.resizeNeeded)
             return;
         WindowManager.ticksSinceEvent++;
@@ -63,9 +65,12 @@
 
     WindowManager.selectedSlot = 1;
     WindowManager.statPanel = null;
+    WindowManager.healthbar = null;
+    WindowManager.healthbarbg = null;
 
     WindowManager.createUI = function(){
-
+        WindowManager.healthbar = $("#hp");
+        WindowManager.healthbarbg = $("#hpbg");
         //Inventory Panel
         WindowManager.resizeUI();
 
@@ -85,17 +90,15 @@
         slickUI.add(ammo);
         slickUI.add(kills);
         slickUI.add(fps);
+
     }
 
     WindowManager.resizeUI = function(){
+        //Inventory
         var w = window.innerWidth * window.devicePixelRatio;
         var h = window.innerHeight * window.devicePixelRatio;
         var invHeight =  Math.min(64, (w * 0.6)/9);
         var invWidth = invHeight*9 + 5*8;
-        // console.log(invWidth);
-        // var invHeight = invWidth/9;
-        // $("#inventoryBG").height(invHeight);
-        // $("#inventoryBG").css({left: (w-invWidth)/2, top: h - invHeight*2});
 
         for(var i = 1; i <= 9; i++){
             var curSlot = '#inv' + i;
@@ -103,9 +106,15 @@
             $(curSlot).width(invHeight);
             $(curSlot).css({left: (w-invWidth)/2 +  (i-1)*(5+invHeight), top: h - invHeight*2});
         }
-
         $('.invIcon').height(invHeight-2);
         $('.invIcon').width(invHeight-2);
+
+        //Health bar
+        WindowManager.healthbar.height(invHeight*0.6);
+        WindowManager.healthbarbg.height(invHeight*0.6+4);
+        WindowManager.healthbar.width(invWidth-4);
+        WindowManager.healthbarbg.width(invWidth);
+        WindowManager.healthbarbg.css({left: (w-invWidth)/2, top: h - invHeight*3});
 
     }
 
@@ -116,6 +125,12 @@
         $(oldSlot).css('opacity', '0.5');
         $(newSlot).css('opacity', '1');
     }
+
+    WindowManager.updateHealthBar = function(){
+        var width = WindowManager.healthbarbg.width();
+        WindowManager.healthbar.width(width*Player.thisPlayer.hp/100.0);
+    }
+
 
 
     //Keeps track of inputs
@@ -410,8 +425,8 @@
 
     GunHandler.useRequest = function(){
         //Check if over UI
-        var x = game.input.mousePointer.x;
-        var y = game.input.mousePointer.y;
+        var x = game.input.mousePointer.x + game.camera.x;
+        var y = game.input.mousePointer.y + game.camera.y;
         socket.emit('useRequest', [x,y]);
     }
 

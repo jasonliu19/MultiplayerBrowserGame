@@ -23,7 +23,7 @@ var Player = function (id) {
     self.dead = false;
     self.respawnTimer = 0;
 
-    self.equippedItem = 3;
+    self.equippedItem = 1;
     self.inventory = [null, 'rifle', 'shotgun', 'sniper', 'tool', 'wood', null, null, null, null];
     self.cooldowns = [0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -34,7 +34,7 @@ var Player = function (id) {
     }
 
     self.resources = {
-        wood: 5,
+        wood: 10,
     }
 
     self.killCount = 0;
@@ -245,7 +245,7 @@ Player.handleUseRequest = function(socketid, cursorPosition){
             player.resources[resourceCollected]++;
         }
     } else if (inventory[equipped] === 'wood' && player.cooldowns[equipped] <= 0){
-        player.cooldowns[equipped] = constants.TOOLCOOLDOWN;
+        player.cooldowns[equipped] = 0;
         if (player.resources['wood'] > 0){
             BuildingManager.placeWood(cursorPosition[0], cursorPosition[1]);
             player.resources['wood']--;
