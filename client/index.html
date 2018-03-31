@@ -513,6 +513,8 @@
         map.addTilesetImage('tiles');
         layer = map.createLayer(0);
         layer.resizeWorld();
+        layer.position.set(32, 32);
+
         game.time.advancedTiming = true;
         game.stage.disableVisibilityChange = true;
         game.stage.backgroundColor = '#95BCC7';
