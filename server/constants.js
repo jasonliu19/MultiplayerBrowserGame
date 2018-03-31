@@ -5,9 +5,9 @@ exports.HITRADIUS = 70;
 exports.HITDELAY = 2;
 
 //Equipped items
-exports.RIFLEDAMAGE = 50;
-exports.SHOTGUNDAMAGE = 34;
-exports.SNIPERDAMAGE = 100;
+exports.RIFLEDAMAGE = 30;
+exports.SHOTGUNDAMAGE = 20;
+exports.SNIPERDAMAGE = 75;
 exports.TOOLDAMAGETOBLOCK = 250;
 exports.RIFLECOOLDOWN = 8;
 exports.SHOTGUNCOOLDOWN = 20;

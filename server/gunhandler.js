@@ -124,7 +124,7 @@ GunHandler.sniperShootRequest = function(angle, position){
             //Check if enemy was hit
             if(result.body !== null && result.body.shapes[0].collisionGroup === constants.ENEMY){
                 if(Enemy.list[result.body.id]){
-                    killedEnemy = Enemy.list[result.body.id].decreaseHealth(constants.SNIPERDAMAGE);
+                    killedEnemy = Enemy.list[result.body.id].decreaseHealth(constants.SNIPERDAMAGE/2);
                 }
             }
 

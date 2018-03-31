@@ -57,7 +57,7 @@ var Enemy = function(x, y, playerid){
             isDead = true;
     	}
         //Stagger after getting shot
-        self.body.velocity = [0,0];
+        self.body.velocity = [self.body.velocity[0]*-1, self.body.velocity[1]*-1];
         return isDead;
     }
     

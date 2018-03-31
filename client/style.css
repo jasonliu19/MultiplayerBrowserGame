@@ -13,15 +13,29 @@ body{
 	opacity: 0.8;
 	position: absolute;
 	width: 40%;
-	height: 15%;
+/*	height: 15%;*/
 	z-index: 2;
 	left: 20%;
-	top: 20%;
-	display: none;
+	top: 30%;
 }
 
-#youdied p{
-	
+#youdiedtitle{
+	text-align: center;
+	color: red;
+	font-family: 'Helvetica', Sans-serif;
+	font-size: 3em;
+	height: 20%;
+	padding-top: 4px;
+	margin-top: 4px;
+}
+
+#respawntime{
+	text-align: center;
+	color: black;
+	font-family: 'Helvetica', Sans-serif;
+	font-size: 1em;
+	padding-bottom: 4px;
+	margin-bottom: 4px;
 }
 
 #hp{

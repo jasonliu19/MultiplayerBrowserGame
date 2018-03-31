@@ -3,8 +3,15 @@
     </div>
 <!--     <div id = "inventoryBG"> -->
     </div>
-    <div id = "youdied"><h1>You Died</h1><p></p></div>
-    <div id = "hpbg"><div id = "hp"></div></div>
+    <div id = "youdied">
+        <h1 id = "youdiedtitle">YOU DIED!</h1>
+        <p id = "respawntime">Respawning in 10 seconds</p>
+    </div>
+    
+    <div id = "hpbg">
+        <div id = "hp"></div>
+    </div>
+
     <div class = "inventorySlot" id = "inv1"><p>1<p><img src="/assets/akiconrotated.png" class="invIcon"></div>
     <div class = "inventorySlot" id = "inv2"><p>2<p><img src="/assets/shotgunrotated.png" class="invIcon"></div>
     <div class = "inventorySlot" id = "inv3"><p>3<p><img src="/assets/sniper.png" class="invIcon"></div>
@@ -39,6 +46,7 @@
     var WindowManager = {}; 
     WindowManager.update = function(){
         WindowManager.updateHealthBar();
+        WindowManager.updateDeathMessage();
         if(!WindowManager.resizeNeeded)
             return;
         WindowManager.ticksSinceEvent++;
@@ -70,12 +78,15 @@
     WindowManager.healthbarbg = null;
 
     WindowManager.deathmessage = null;
+    WindowManager.deathmessagetext = null;
 
     WindowManager.createUI = function(){
         WindowManager.healthbar = $("#hp");
         WindowManager.healthbarbg = $("#hpbg");
 
         WindowManager.deathmessage = $("#youdied");
+        WindowManager.deathmessagetext = $("#respawntime");
+        WindowManager.deathmessagetimer = 0;
         //Inventory Panel
         WindowManager.resizeUI();
 
@@ -120,11 +131,21 @@
         WindowManager.healthbar.width(invWidth-4);
         WindowManager.healthbarbg.width(invWidth);
         WindowManager.healthbarbg.css({left: (w-invWidth)/2, top: h - invHeight*2.75});
+        
+        WindowManager.resizeDeathMessage();
 
-        WindowManager.deathmessage.height(invHeight*2.5);
-        WindowManager.deathmessage.width(invWidth);
-        WindowManager.deathmessage.css({left: (w-invWidth)/2});
+    }
 
+    WindowManager.resizeDeathMessage = function(){
+        var w = window.innerWidth * window.devicePixelRatio;
+        var h = window.innerHeight * window.devicePixelRatio;
+        var invHeight =  Math.min(64, (w * 0.6)/9);
+        var invWidth = invHeight*9 + 5*8;
+        var textHeight = $('#youdiedtitle').outerHeight(true) 
+                        + $('#respawntime').outerHeight(true);
+        WindowManager.deathmessage.height(textHeight);
+        WindowManager.deathmessage.width(invWidth*0.66);
+        WindowManager.deathmessage.css({left: (w-invWidth*0.66)/2});
     }
 
     WindowManager.updateEquippedSlot = function(slot){
@@ -138,6 +159,25 @@
     WindowManager.updateHealthBar = function(){
         var width = WindowManager.healthbarbg.width()-4;
         WindowManager.healthbar.width(width*Player.thisPlayer.hp/100.0);
+    }
+
+    WindowManager.updateDeathMessage = function(){
+        if(Player.thisPlayer.hp <= 0)
+        {
+            if(WindowManager.deathmessagetimer <= 0){
+                WindowManager.deathmessagetimer = 600;
+                WindowManager.deathmessage.css('display', 'block');
+                WindowManager.resizeDeathMessage();
+            }
+            WindowManager.deathmessagetimer--;
+            var respawnTime = Math.ceil(WindowManager.deathmessagetimer / 60);
+            WindowManager.deathmessagetext.text("Respawning in " + respawnTime + " seconds");
+
+        }
+        else{
+            WindowManager.deathmessagetimer = 0;
+            WindowManager.deathmessage.css('display', 'none');
+        }
     }
 
 
