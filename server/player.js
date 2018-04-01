@@ -141,6 +141,10 @@ var Player = function (id) {
         self.respawnTimer = constants.RESPAWNTIME;
         self.body.velocity = [0,0];
         self.body.position = [250, -500];
+        self.pressingLeft = false;
+        self.pressingRight = false;
+        self.pressingUp = false;
+        self.pressingDown = false;
         socketHandler.emitAll('playerDeath', self.id);
     }
 
@@ -155,14 +159,8 @@ var Player = function (id) {
         self.hp = 100;
         self.dead = false;
         self.respawnTimer = 0;
-        self.ammo = {
-            rifle: 50,
-            shotgun: 500,
-            sniper: 500,
-        }
-        self.resources = {
-            wood: 5,
-        }
+        self.ammo = constants.STARTINGAMMO;
+        self.resources = constants.STARTINGRESOURCESL
         self.body.position = [250, 250];
     }
 

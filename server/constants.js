@@ -15,6 +15,17 @@ exports.SNIPERCOOLDOWN = 40;
 exports.TOOLCOOLDOWN = 5;
 exports.RESPAWNTIME = 600;
 
+//Spawn vals
+exports.STARTINGAMMO = {
+    rifle: 50,
+    shotgun: 20,
+    sniper: 10,
+};
+exports.STARTINGRESOURCES = {
+    wood: 10,
+}
+
+
 
 //Collision groups
 exports.PLAYER = Math.pow(2,0);
