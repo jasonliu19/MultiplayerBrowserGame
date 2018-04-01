@@ -50,7 +50,7 @@
         if(!WindowManager.resizeNeeded)
             return;
         WindowManager.ticksSinceEvent++;
-        if(WindowManager.ticksSinceEvent < 15)
+        if(WindowManager.ticksSinceEvent < 5)
             return;
 
         WindowManager.ticksSinceEvent = 0
@@ -98,7 +98,7 @@
         WindowManager.statPanel = new SlickUI.Element.Panel(x,y,sizex,sizey)
         slickUI.add(WindowManager.statPanel);
         WindowManager.statPanel.alpha = 0.8;
-        hp = new SlickUI.Element.Text(16+8,16+4, 'HP: 100', 24); 
+        hp = new SlickUI.Element.Text(16+8,16+4, 'Hp: 100', 24); 
         ammo = new SlickUI.Element.Text(16+8,16+32, 'Ammo: 100', 24); 
         kills = new SlickUI.Element.Text(16+8,16+60, 'KIlls: 0', 24);
         fps = new SlickUI.Element.Text(16+8,16+94, 'FPS: 0', 10);  
@@ -167,8 +167,9 @@
             if(WindowManager.deathmessagetimer <= 0){
                 WindowManager.deathmessagetimer = 600;
                 WindowManager.deathmessage.css('display', 'block');
-                WindowManager.resizeDeathMessage();
+                
             }
+            WindowManager.resizeDeathMessage();
             WindowManager.deathmessagetimer--;
             var respawnTime = Math.ceil(WindowManager.deathmessagetimer / 60);
             WindowManager.deathmessagetext.text("Respawning in " + respawnTime + " seconds");
@@ -548,7 +549,9 @@
         game.load.image('grass', '/assets/grass.png');
         game.load.image('tree', '/assets/tree.png');
         game.load.image('rifleammo', '/assets/rifleammo.png');
-        game.load.image('sniperIcon', '/assets/tree.png');
+        game.load.image('shotgunammo', '/assets/shotgunammo.png');
+        game.load.image('sniperammo', '/assets/sniperammo.png');
+        game.load.image('sniperIcon', '/assets/sniper.png');
         game.load.image('shotgunIcon', '/assets/shotgunrotated.png');        
 
         // LOADING TILESET ASSETS
@@ -561,14 +564,13 @@
     }
     
     var fps;
-    var hp;
     var ammo;
+    var kills;
+    var hp;
     var startGame =false;
 
     // Tileset Variables
     var map;
-    var kills;
-
     //Initializes game
     function create() {
         game.world.setBounds(0, 0, 1920, 1080);
@@ -668,7 +670,7 @@
             InputManager.update();
             fps.value = 'FPS: ' + game.time.fps;
             try{
-                hp.value = 'Health: ' + Player.thisPlayer.hp;
+                
                 if(Player.thisPlayer.equipped === 1) {
                     ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.rifle;
                 }
@@ -679,6 +681,7 @@
                     ammo.value = 'Ammo: ' + Player.thisPlayer.ammo.sniper;
                 }
                 kills.value = 'Kills: ' + Player.thisPlayer.killCount;
+                hp.value = 'HP: ' + Player.thisPlayer.hp;
             } catch (e){} 
 
             Player.updateAllPositons();

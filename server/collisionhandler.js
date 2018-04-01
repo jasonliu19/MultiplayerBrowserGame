@@ -146,8 +146,13 @@ CollisionHandler.updateGroundItems = function(){
             var playersize = [constants.HUMANOIDSIZE, constants.HUMANOIDSIZE];
             if(CollisionHandler.checkOverlap(playerpos, itempos, playersize, itemsize)){
                 try{
-                    //Temporary, only for ammo with fixed quantity
-                    player.ammo.rifle += 50;
+                    if(item.type === 'rifleammo'){
+                        player.ammo.rifle += item.quantity;
+                    } else if (item.type === 'shotgunammo'){
+                        player.ammo.shotgun += item.quantity;
+                    } else if (item.type === 'sniperammo'){
+                        player.ammo.sniper += item.quantity;
+                    }
                     item.destroy();
 
                 }catch(error){

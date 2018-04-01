@@ -24,18 +24,23 @@ body{
 	color: red;
 	font-family: 'Helvetica', Sans-serif;
 	font-size: 3em;
-	height: 20%;
+/*	height: 20%;*/
 	padding-top: 4px;
 	margin-top: 4px;
+	padding-bottom: 4px;
+	margin-bottom: 4px;
 }
 
 #respawntime{
 	text-align: center;
 	color: black;
+	position: relative;
 	font-family: 'Helvetica', Sans-serif;
 	font-size: 1em;
 	padding-bottom: 4px;
 	margin-bottom: 4px;
+	padding-top: 0px;
+	margin-top: 0px;
 }
 
 #hp{

@@ -29,8 +29,8 @@ var Player = function (id) {
 
     self.ammo = {
         rifle: 50,
-        shotgun: 500,
-        sniper: 500,
+        shotgun: 20,
+        sniper: 10,
     }
 
     self.resources = {

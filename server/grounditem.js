@@ -54,8 +54,18 @@ GroundItem.randomlySpawnAmmo = function(){
 		return;
 	var randx = Math.random()*constants.WORLDWIDTH;
 	var randy = Math.random()*constants.WORLDHEIGHT;
-	var item = GroundItem('ammo', 'rifleammo', [randx,randy], 50);
-	socketHandler.emitAll('createAmmo', {type: 'rifleammo', position: item.position, id: item.id});
+	var itemType = Math.ceil(Math.random()*5);
+	var item;
+	if(itemType === 5){
+		item = GroundItem('ammo', 'sniperammo', [randx,randy], 10);
+		socketHandler.emitAll('createAmmo', {type: 'sniperammo', position: item.position, id: item.id});
+	} else if (itemType === 4){
+		item = GroundItem('ammo', 'shotgunammo', [randx,randy], 20);
+		socketHandler.emitAll('createAmmo', {type: 'shotgunammo', position: item.position, id: item.id});
+	} else{
+		item = GroundItem('ammo', 'rifleammo', [randx,randy], 40);
+		socketHandler.emitAll('createAmmo', {type: 'rifleammo', position: item.position, id: item.id});
+	}
 	GroundItem.count++;
 }
 

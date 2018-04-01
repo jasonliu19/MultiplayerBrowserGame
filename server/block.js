@@ -72,12 +72,7 @@ Block.createLine = function(x, y, length, direction, texture){
 Block.initMap = function(){
     // Block.createLine(0, 600, 10, 'right', 'tree');
     // Block.createLine(1000, 0, 10, 'down', 'grass');
-    while(Block.count < 35){
-        //Force block to be created on a grid
-        var randx = Math.floor(mathfunc.randomInt(0,constants.WORLDWIDTH)/BLOCKSIZE)*BLOCKSIZE;
-        var randy = Math.floor(mathfunc.randomInt(0,constants.WORLDHEIGHT)/BLOCKSIZE)*BLOCKSIZE;
-        Block(randx, randy, 'tree');
-    }
+    Block.createRandomTrees();
 }
 
 Block.create = function (x,y, texture) {
@@ -89,8 +84,8 @@ Block.create = function (x,y, texture) {
 Block.createRandomTrees = function(){
     while(Block.count < 35){
         //Force block to be created on a grid
-        var randx = Math.floor(mathfunc.randomInt(0,constants.WORLDWIDTH)/BLOCKSIZE)*BLOCKSIZE;
-        var randy = Math.floor(mathfunc.randomInt(0,constants.WORLDHEIGHT)/BLOCKSIZE)*BLOCKSIZE;
+        var randx = Math.floor(mathfunc.randomInt(0,constants.WORLDWIDTH)/BLOCKSIZE)*BLOCKSIZE-32;
+        var randy = Math.floor(mathfunc.randomInt(0,constants.WORLDHEIGHT)/BLOCKSIZE)*BLOCKSIZE-32;
         Block.create(randx, randy, 'tree');
     }    
 }
